@@ -7,7 +7,7 @@ When using this the first time...
 
 You'll be prompted to enter the accumulo instance name and pasword...
 
-After running init (make sure to source the .env file to get your path right), try running:
+After running init (and make sure you sourced the .env file to get your path right!), try running:
 
     hadoop fs -ls /user/yourusername
     accumulo shell -u root -p secret
