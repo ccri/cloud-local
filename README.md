@@ -5,7 +5,7 @@ When using this the first time...
     source .env
     ./init.sh
 
-You'll be prompted to enter the accumulo instance name and pasword...
+You'll be prompted to enter the accumulo instance name and pasword...(hint: try "local" and "secret")
 
 After running init (and make sure you sourced the .env file to get your path right!), try running:
 
@@ -24,3 +24,10 @@ After installing it you should be able to reach your standard cloud urls:
 * Accumulo:    http://localhost:50095
 * Hadoop DFS:  http://localhost:50070
 * Job Tracker: http://localhost:8088
+
+There are a few other scripts:
+
+* ```.\start_cloud.sh``` - Start the cloud (make sure it isn't running)
+* ```.\stop_cloud.sh``` - Stop the cloud safely...hopefully
+
+If you foobar you cloud, DELETE IT ALL and checkout from git again.
