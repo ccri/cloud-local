@@ -27,7 +27,7 @@ After installing it you should be able to reach your standard cloud urls:
 
 There are a few other scripts:
 
-* ```.\start_cloud.sh``` - Start the cloud (make sure it isn't running)
-* ```.\stop_cloud.sh``` - Stop the cloud safely...hopefully
+* ```./start_cloud.sh``` - Start the cloud (make sure it isn't running)
+* ```./stop_cloud.sh``` - Stop the cloud safely...hopefully
 
 If you foobar you cloud, DELETE IT ALL and checkout from git again.
