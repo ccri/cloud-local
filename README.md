@@ -19,3 +19,8 @@ This init script does several things:
 * initialize accumulo (you'll be prompted to entire password and instance name...try "local" for the instance and "secret" for the password)
 * start up zookeeper/hadoop/accumulo
 
+After installing it you should be able to reach your standard cloud urls:
+
+Accumulo:    http://localhost:50095
+Hadoop DFS:  http://localhost:50070
+Job Tracker: http://localhost:8088
