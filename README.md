@@ -21,6 +21,6 @@ This init script does several things:
 
 After installing it you should be able to reach your standard cloud urls:
 
-Accumulo:    http://localhost:50095
-Hadoop DFS:  http://localhost:50070
-Job Tracker: http://localhost:8088
+* Accumulo:    http://localhost:50095
+* Hadoop DFS:  http://localhost:50070
+* Job Tracker: http://localhost:8088
