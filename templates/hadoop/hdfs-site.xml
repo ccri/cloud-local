@@ -21,6 +21,10 @@
         <value>1</value>
     </property>
     <property>
+        <name>dfs.datanode.synconclose</name>
+        <value>true</value>
+    </property>
+    <property>
         <name>dfs.name.dir</name>
         <value>LOCAL_CLOUD_PREFIX/data/dfs/name</value>
     </property>
