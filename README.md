@@ -45,7 +45,6 @@ There are a few other scripts:
 * ```bin/start_cloud.sh``` - Start the cloud (make sure it isn't running)
 * ```bin/stop_cloud.sh``` - Stop the cloud safely...hopefully
 
-
 ## Maintenance
 
 If you foobar your cloud, you can just delete everything and start over. You should do this once a week or so just for good measure.  

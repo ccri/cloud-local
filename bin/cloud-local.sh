@@ -24,39 +24,41 @@ fi
 function download_packages() {
   # get stuff
   echo "Downloading packages from internet..."
-  mkdir $CLOUD_HOME/pkg # todo check to see if this exists
-  mirror="http://mirrors.ibiblio.org"
-  declare -a urls=("$mirror/apache/accumulo/1.6.4/accumulo-1.6.4-bin.tar.gz"
-                   "$mirror/apache/hadoop/common/hadoop-2.6.3/hadoop-2.6.3.tar.gz"
-                   "$mirror/apache/zookeeper/zookeeper-3.4.6/zookeeper-3.4.6.tar.gz") 
+  mkdir ${CLOUD_HOME}/pkg # todo check to see if this exists
+  local mirror=${pkg_src_mirror}
+  local maven=${pkg_src_maven}
+
+  declare -a urls=("${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
+                   "${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
+                   "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz") 
   
   for x in "${urls[@]}"; do
       fname=$(basename "$x");
       echo "fetching ${x}";
-      wget -O "$CLOUD_HOME/pkg/${fname}" "$x";
+      wget -O "${CLOUD_HOME}/pkg/${fname}" "$x";
   done 
 }
 
 function unpackage {
   echo "Unpackaging software..."
-  (cd -P "$CLOUD_HOME" && tar xvf $CLOUD_HOME/pkg/zookeeper-3.4.6.tar.gz)
-  (cd -P "$CLOUD_HOME" && tar xvf $CLOUD_HOME/pkg/accumulo-1.6.4-bin.tar.gz)
-  (cd -P "$CLOUD_HOME" && tar xvf $CLOUD_HOME/pkg/hadoop-2.6.3.tar.gz)
+  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz")
+  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
+  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
 }
 
 function configure {
-  mkdir -p $CLOUD_HOME/tmp/staging
-  cp -r $CLOUD_HOME/templates/* $CLOUD_HOME/tmp/staging/
+  mkdir -p "${CLOUD_HOME}/tmp/staging"
+  cp -r ${CLOUD_HOME}/templates/* ${CLOUD_HOME}/tmp/staging/
   ## Substitute env vars
-  sed -i "s#LOCAL_CLOUD_PREFIX#$CLOUD_HOME#" $CLOUD_HOME/tmp/staging/*/*
+  sed -i "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#" ${CLOUD_HOME}/tmp/staging/*/*
   
   echo "Deploying config..."
   test -d $HADOOP_CONF_DIR &&  mkdir $HADOOP_CONF_DIR
   test -d $ZOOKEEPER_HOME/conf && mkdir $ZOOKEEPER_HOME/conf
-  cp $CLOUD_HOME/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
-  cp $CLOUD_HOME/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
-  
-  rm $CLOUD_HOME/tmp/staging -rf
+  cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
+  cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
+
+  rm ${CLOUD_HOME}/tmp/staging -rf
 }
 
 function start_first_time {
@@ -97,18 +99,18 @@ function start_first_time {
 }
 
 function clear_sw {
-  rm $CLOUD_HOME/accumulo-1.6.4 -rf
-  rm $CLOUD_HOME/hadoop-2.6.3 -rf
-  rm $CLOUD_HOME/zookeeper-3.4.6 -rf
-  rm $CLOUD_HOME/tmp -rf
+  rm "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}" -rf
+  rm "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}" -rf
+  rm "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}" -rf
+  rm "${CLOUD_HOME}/tmp" -rf
 }
 
 function clear_data {
   # TODO prompt
-  rm $CLOUD_HOME/data/yarn/* -rf
-  rm $CLOUD_HOME/data/zookeeper/* -rf
-  rm $CLOUD_HOME/data/dfs/data/* -rf
-  rm $CLOUD_HOME/data/dfs/name/* -rf
+  rm ${CLOUD_HOME}/data/yarn/* -rf
+  rm ${CLOUD_HOME}/data/zookeeper/* -rf
+  rm ${CLOUD_HOME}/data/dfs/data/* -rf
+  rm ${CLOUD_HOME}/data/dfs/name/* -rf
 }
 
 function show_help {

@@ -22,19 +22,45 @@ if [ ! -d "${CLOUD_HOME}" ]; then
   exit 1
 fi
 
-export ZOOKEEPER_HOME=$CLOUD_HOME/zookeeper-3.4.6
+function validate_config {
+  # todo validate versions?
+  # allowed versions are hadoop 2.6.x, zk 3.4.6, acc 1.6.x
+  local pkg_error=""
+  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.]6[.]. ]]; then
+    pkg_error="Invalid hadoop version: '${pkg_hadoop_ver}'"
+  elif [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.]6 ]]; then
+    pkg_error="Invalid zookeeper version: '${pkg_zookeeper_ver}'"
+  elif [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.]6[.]. ]]; then
+    pkg_error="Invalid accumulo version: '${pkg_accumulo_ver}'"
+  fi
+  
+  if [[ ! -z "$pkg_error" ]]; then
+    echo "ERROR: ${pkg_error}"
+    exit 1
+  fi
+}
 
-export HADOOP_HOME=$CLOUD_HOME/hadoop-2.6.3
-export HADOOP_PREFIX=$CLOUD_HOME/hadoop-2.6.3
-export YARN_HOME=$CLOUD_HOME/hadoop-2.6.3
-export HADOOP_CONF_DIR=$CLOUD_HOME/hadoop-2.6.3/etc/hadoop
-
-export ACCUMULO_HOME=$CLOUD_HOME/accumulo-1.6.4
-
-export PATH=$ZOOKEEPER_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$PATH
+function set_env_vars {
+  export ZOOKEEPER_HOME="${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
+  
+  export HADOOP_HOME="$CLOUD_HOME/hadoop-${pkg_hadoop_ver}"
+  export HADOOP_PREFIX="${HADOOP_HOME}"
+  export YARN_HOME="${HADOOP_HOME}"
+  export HADOOP_CONF_DIR="${HADOOP_PREFIX}/etc/hadoop"
+  
+  export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
+  
+  export PATH=$ZOOKEEPER_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$PATH
+}
 
 if [[ -z "$JAVA_HOME" ]];then
   echo "must set JAVA_HOME..."
   exit 1
 fi
+
+# load configuration scripts
+. "${CLOUD_HOME}/conf/cloud-local.conf"
+validate_config
+set_env_vars
+
 
