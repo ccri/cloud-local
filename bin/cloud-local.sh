@@ -21,6 +21,9 @@ if [[ -z "$JAVA_HOME" ]];then
 fi
 # Stop: config
 
+# import port checking
+. "${bin}"/check_ports.sh
+
 function download_packages() {
   # get stuff
   echo "Downloading packages from internet..."
@@ -62,6 +65,9 @@ function configure {
 }
 
 function start_first_time {
+  # check ports
+  check_ports
+
   # start zk
   echo "Starting zoo..."
   $ZOOKEEPER_HOME/bin/zkServer.sh start
@@ -98,6 +104,46 @@ function start_first_time {
   $ACCUMULO_HOME/bin/start-all.sh
 }
 
+function start_cloud {
+  # Check ports
+  check_ports
+  
+  # start zk
+  echo "Starting zoo..."
+  zkServer.sh start
+  
+  # start hadoop
+  echo "Starting hadoop..."
+  hadoop-daemon.sh --config $HADOOP_CONF_DIR start namenode
+  hadoop-daemon.sh --config $HADOOP_CONF_DIR start secondarynamenode
+  hadoop-daemon.sh --config $HADOOP_CONF_DIR start datanode
+  yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
+  yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+  
+  # Wait for HDFS to exit safemode:
+  echo "Waiting for HDFS to exit safemode..."
+  hdfs dfsadmin -safemode wait
+  
+  # starting accumulo
+  echo "starting accumulo..."
+  $ACCUMULO_HOME/bin/start-all.sh
+}
+
+function stop_cloud {
+  echo "Stopping accumulo..."
+  $ACCUMULO_HOME/bin/stop-all.sh
+  
+  echo "Stopping yarn and dfs..."
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop resourcemanager
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop nodemanager
+  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop namenode
+  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop secondarynamenode
+  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop datanode
+  
+  echo "stopping zookeeper"
+  $ZOOKEEPER_HOME/bin/zkServer.sh stop
+}
+
 function clear_sw {
   rm "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}" -rf
   rm "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}" -rf
@@ -114,7 +160,7 @@ function clear_data {
 }
 
 function show_help {
-  echo "Provide 1 parameter: (init|reconfigure|clean|help)"
+  echo "Provide 1 command: (init|start|stop|reconfigure|clean|help)"
 }
 
 if [ "$#" -ne 1 ]; then
@@ -132,6 +178,14 @@ elif [[ $1 == 'clean' ]]; then
   echo "cleaning..."
   clear_sw && clear_data
   echo "cleaned!"
+elif [[ $1 == 'start' ]]; then
+  echo "Starting cloud..."
+  start_cloud
+  echo "Cloud Started"
+elif [[ $1 == 'stop' ]]; then
+  echo "Stopping Cloud..."
+  stop_cloud
+  echo "Cloud stopped"
 else
   show_help
 fi
