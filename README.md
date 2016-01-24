@@ -40,17 +40,18 @@ After installing it you should be able to reach your standard cloud urls:
 * Hadoop DFS:  http://localhost:50070
 * Job Tracker: http://localhost:8088
 
-There are a few other scripts:
+There are a few other commands:
 
-* ```bin/start_cloud.sh``` - Start the cloud (make sure it isn't running)
-* ```bin/stop_cloud.sh``` - Stop the cloud safely...hopefully
+* ```bin/cloud-local.sh start``` - Start the cloud (make sure it isn't running). Note that if existing ports are bound to the ports needed for cloud local an error message will be printed and the script will stop
+* ```bin/cloud-local.sh stop``` - Stop the cloud safely...hopefully
+
 
 ## Maintenance
 
 If you foobar your cloud, you can just delete everything and start over. You should do this once a week or so just for good measure.  
 
     cd $CLOUD_HOME
-    bin/stop_cloud.sh  #if cloud is running
+    bin/cloud-local.sh stop  #if cloud is running
     rm * -rf
     git pull
     git reset --hard
