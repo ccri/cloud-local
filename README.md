@@ -58,3 +58,7 @@ If you foobar your cloud, you can just delete everything and start over. You sho
     bin/cloud-local.sh init
 
 The `cloud-local.sh` script provides some less drastic options. The parameter `clean` will remove software (but not the tar.gz's) and data. The parameter `reconfigure` will first `clean` then `init`.
+
+## Virtual Machine Help
+
+If you are using cloud-local within a virtual machine running you your local box you may want to set up port forwarding for port 50095 to see the accumulo monitor. For VirtualBox go to VM's Settings->Network->Port Forwarding section (name=accumulo, protocol=TCP, Host IP=127.0.0.1, Guest IP (leave blank), Guest Port=50095)
