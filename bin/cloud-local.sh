@@ -94,7 +94,9 @@ function start_first_time {
   
   # create accumulo config
   cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
-  
+  # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
+  sed -i "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
+
   # init accumulo
   echo "Initializing accumulo"
   $ACCUMULO_HOME/bin/accumulo init
