@@ -49,13 +49,14 @@ Options for using `cloud-local.sh` can be found by calling:
 ## Stopping and Starting
 
 You can safely stop the cloud using: 
+
     bin/cloud-local.sh stop
 
 You should stop the cloud before shutting down the machine or doing maintenance.
 
 You can start the cloud back up using the analogous `start` option. Be sure that the cloud is not running (hit the cloud urls or `ps aux|grep -i hadoop`).
 
-`bin/cloud-local.sh start`
+    bin/cloud-local.sh start
 
 If existing ports are bound to the ports needed for cloud-local an error message will be printed and the script will stop.
 
