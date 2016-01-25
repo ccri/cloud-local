@@ -40,13 +40,41 @@ After installing it you should be able to reach your standard cloud urls:
 * Hadoop DFS:  http://localhost:50070
 * Job Tracker: http://localhost:8088
 
-There are a few other commands:
+## Getting Help
 
-* ```bin/cloud-local.sh start``` - Start the cloud (make sure it isn't running). Note that if existing ports are bound to the ports needed for cloud local an error message will be printed and the script will stop
-* ```bin/cloud-local.sh stop``` - Stop the cloud safely...hopefully
+Options for using `cloud-local.sh` can be found by calling:
+
+    bin\cloud-local.sh help
+
+## Stopping and Starting
+
+You can safely stop the cloud using: 
+    bin/cloud-local.sh stop
+
+You should stop the cloud before shutting down the machine or doing maintenance.
+
+You can start the cloud back up using the analogous `start` option. Be sure that the cloud is not running (hit the cloud urls or `ps aux|grep -i hadoop`).
+
+`bin/cloud-local.sh start`
+
+If existing ports are bound to the ports needed for cloud-local an error message will be printed and the script will stop.
 
 
 ## Maintenance
+
+The `cloud-local.sh` script provides options for maintenance. Best to stop the cloud before performing any of these tasks. Pass in the parameter `clean` to remove software (but not the tar.gz's) and data. The parameter `reconfigure` will first `clean` then `init`.
+
+### Updating
+
+When this git repo is updated, follow the steps below. The steps below will remove your data. 
+
+    cd $CLOUD_HOME
+    bin/cloud-local.sh stop
+    bin/cloud-local.sh clean
+    git pull
+    bin/cloud-local.sh init
+
+### Starting over
 
 If you foobar your cloud, you can just delete everything and start over. You should do this once a week or so just for good measure.  
 
@@ -56,8 +84,6 @@ If you foobar your cloud, you can just delete everything and start over. You sho
     git pull
     git reset --hard
     bin/cloud-local.sh init
-
-The `cloud-local.sh` script provides some less drastic options. The parameter `clean` will remove software (but not the tar.gz's) and data. The parameter `reconfigure` will first `clean` then `init`.
 
 ## Virtual Machine Help
 

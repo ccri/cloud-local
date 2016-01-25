@@ -1,0 +1,5 @@
+data/*
+*.tar.gz
+/accumulo*
+/hadoop*
+/zookeeper*
