@@ -33,7 +33,8 @@ function download_packages() {
 
   declare -a urls=("${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
                    "${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
-                   "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz") 
+                   "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
+		   "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
   
   for x in "${urls[@]}"; do
       fname=$(basename "$x");
@@ -47,6 +48,7 @@ function unpackage {
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
+  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
 }
 
 function configure {
@@ -71,6 +73,10 @@ function start_first_time {
   # start zk
   echo "Starting zoo..."
   $ZOOKEEPER_HOME/bin/zkServer.sh start
+
+  # start kafka
+  echo "Starting kafka..." 
+  $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
   
   # format namenode
   echo "Formatting namenode..."
@@ -113,6 +119,9 @@ function start_cloud {
   # start zk
   echo "Starting zoo..."
   zkServer.sh start
+
+  echo "Starting kafka..."
+  $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
   
   # start hadoop
   echo "Starting hadoop..."
@@ -132,6 +141,10 @@ function start_cloud {
 }
 
 function stop_cloud {
+
+  echo "Stopping kafka"
+  $KAFKA_HOME/bin/kafka-server-stop.sh
+
   echo "Stopping accumulo..."
   $ACCUMULO_HOME/bin/stop-all.sh
   
@@ -141,7 +154,7 @@ function stop_cloud {
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop namenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop secondarynamenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop datanode
-  
+ 
   echo "stopping zookeeper"
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 }
@@ -150,6 +163,7 @@ function clear_sw {
   rm "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}" -rf
   rm "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}" -rf
   rm "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}" -rf
+  rm "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}" -rf
   rm "${CLOUD_HOME}/tmp" -rf
 }
 

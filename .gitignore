@@ -1,0 +1,7 @@
+/data/*
+/pkg/*
+*.tar.gz
+/accumulo*
+/hadoop*
+/zookeeper*
+/kafka*
