@@ -33,7 +33,8 @@ function download_packages() {
 
   declare -a urls=("${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
                    "${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
-                   "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz") 
+                   "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
+		   "${mirror}/nifi/${pkg_nifi_ver}/nifi-${pkg_nifi_ver}-bin.tar.gz") 
   
   for x in "${urls[@]}"; do
       fname=$(basename "$x");
@@ -47,6 +48,7 @@ function unpackage {
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
+  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/nifi-${pkg_nifi_ver}-bin.tar.gz")
 }
 
 function configure {
@@ -58,8 +60,10 @@ function configure {
   echo "Deploying config..."
   test -d $HADOOP_CONF_DIR &&  mkdir $HADOOP_CONF_DIR
   test -d $ZOOKEEPER_HOME/conf && mkdir $ZOOKEEPER_HOME/conf
+  test -d $NIFI_HOME/conf && mkdir $NIFI_HOME/conf
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
+  cp ${CLOUD_HOME}/tmp/staging/nifi/* $NIFI_HOME/conf
 
   rm ${CLOUD_HOME}/tmp/staging -rf
 }
@@ -104,6 +108,10 @@ function start_first_time {
   # starting accumulo
   echo "starting accumulo..."
   $ACCUMULO_HOME/bin/start-all.sh
+
+  # starting nifi
+  echo "starting nifi..."
+  $NIFI_HOME/bin/nifi.sh start
 }
 
 function start_cloud {
@@ -129,6 +137,10 @@ function start_cloud {
   # starting accumulo
   echo "starting accumulo..."
   $ACCUMULO_HOME/bin/start-all.sh
+
+  # starting nifi
+  echo "starting nifi..."
+  $NIFI_HOME/bin/nifi.sh start
 }
 
 function stop_cloud {
@@ -144,12 +156,16 @@ function stop_cloud {
   
   echo "stopping zookeeper"
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
+
+  echo "stopping nifi"
+  $NIFI_HOME/bin/nifi.sh stop
 }
 
 function clear_sw {
   rm "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}" -rf
   rm "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}" -rf
   rm "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}" -rf
+  rm "${CLOUD_HOME}/nifi-${pkg_nifi_ver}" -rf
   rm "${CLOUD_HOME}/tmp" -rf
 }
 

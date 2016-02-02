@@ -49,8 +49,10 @@ function set_env_vars {
   export HADOOP_CONF_DIR="${HADOOP_PREFIX}/etc/hadoop"
   
   export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
-  
-  export PATH=$ZOOKEEPER_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$PATH
+ 
+  export NIFI_HOME="$CLOUD_HOME/nifi-${pkg_nifi_ver}" 
+
+  export PATH=$ZOOKEEPER_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$NIFI_HOME/bin:$PATH
 }
 
 if [[ -z "$JAVA_HOME" ]];then
