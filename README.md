@@ -1,6 +1,6 @@
 # cloud-local
 
-Cloud-local is a collection of bash scripts to set up a single-node cloud on on your desktop, laptop, or NUC. Performance expectations are to be sufficient for testing things like map-reduce ingest, converters in real life with real files, and your own geoserver/iterator stack. This setup is preconfigured to run YARN so you can submit command line tools mapreduce jobs to it. Currently localhost ssh is NOT required so it will work on a NUC. 
+Cloud-local is a collection of bash scripts to set up a single-node cloud on on your desktop, laptop, or NUC. Performance expectations are to be sufficient for testing things like map-reduce ingest, converters in real life with real files, and your own geoserver/iterator stack. This setup is preconfigured to run YARN so you can submit command line tools mapreduce jobs to it. Currently localhost ssh is *not* required so it will work on a NUC. 
 
 ## Getting Started 
 
@@ -19,7 +19,7 @@ This init script does several things:
 * format the HDFS namenode
 * create a user homedir in hdfs
 * initialize accumulo
-* start up zookeeper, hadoop, and accumulo
+* start up zookeeper, hadoop, accumulo, and NiFi
 
 After running `init` source the variables in your bashrc or other shell:
 
@@ -39,6 +39,7 @@ After installing it you should be able to reach your standard cloud urls:
 * Accumulo:    http://localhost:50095
 * Hadoop DFS:  http://localhost:50070
 * Job Tracker: http://localhost:8088
+* NiFi UI:     http://localhost:8080/nifi
 
 There are a few other commands:
 

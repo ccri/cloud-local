@@ -41,7 +41,9 @@ function check_ports {
   check_port 50091 # accumulo gc
   check_port 9999  # accumulo master
   check_port 12234 # accumulo tracer
-  
+
+  check_port 46040 # nifi bootstrap   
+
   echo "Known ports are OK"
 }
 
