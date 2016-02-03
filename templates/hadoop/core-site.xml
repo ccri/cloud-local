@@ -18,6 +18,15 @@
 <configuration>
     <property>
         <name>fs.defaultFS</name>
-        <value>hdfs://localhost:9000</value>
+        <value>hdfs://localhost:9000</value> <!-- CL_port_default 9000 -->
+    </property>
+
+    <property>
+        <name>fs.default.name</name>
+        <value>hdfs://localhost:8020</value> <!-- CL_port_default 8020 -->
+    </property>
+
+    <property>
+        <name>hadoop.tmp.dir</name><value>LOCAL_CLOUD_PREFIX/tmp</value>
     </property>
 </configuration>

@@ -32,4 +32,39 @@
         <name>dfs.data.dir</name>
         <value>LOCAL_CLOUD_PREFIX/data/dfs/data</value>
     </property>
+
+    <property>
+        <name>dfs.datanode.address</name>
+        <value>0.0.0.0:50010</value> <!-- CL_port_default 50010 -->
+    </property>
+
+    <property>
+        <name>dfs.datanode.ipc.address</name>
+        <value>0.0.0.0:50020</value> <!-- CL_port_default 50020 -->
+    </property>
+
+    <property>
+        <name>dfs.datanode.http.address</name>
+        <value>0.0.0.0:50075</value> <!-- CL_port_default 50075 -->
+    </property>
+
+    <property>
+        <name>dfs.datanode.https.address</name>
+        <value>0.0.0.0:50475</value> <!-- CL_port_default 50475 -->
+    </property>
+
+    <property>
+        <name>dfs.namenode.http-address</name>
+        <value>0.0.0.0:50070</value> <!-- CL_port_default 50070 -->
+    </property>
+
+    <property>
+        <name>dfs.namenode.https-address</name>
+        <value>0.0.0.0:50470</value> <!-- CL_port_default 50470 -->
+    </property>
+
+    <property>
+        <name>dfs.namenode.secondary.http-address</name>
+        <value>0.0.0.0:50090</value> <!-- CL_port_default 50090 -->
+    </property>
 </configuration>
