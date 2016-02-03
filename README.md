@@ -40,6 +40,12 @@ After installing it you should be able to reach your standard cloud urls:
 * Hadoop DFS:  http://localhost:50070
 * Job Tracker: http://localhost:8088
 
+### A Second Pass
+
+If you've already run things once, and don't want to wait for the downloads again,
+you can set the `CLOUD_LOCAL_PKGS` variable as a path to a directory with the relevant
+tarballs. Then, when you `init` a new cloud-local, the files will just be copied.
+
 ## Getting Help
 
 Options for using `cloud-local.sh` can be found by calling:
