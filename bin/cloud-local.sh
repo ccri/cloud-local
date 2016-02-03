@@ -56,8 +56,8 @@ function configure {
   sed -i "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#" ${CLOUD_HOME}/tmp/staging/*/*
   
   echo "Deploying config..."
-  test -d $HADOOP_CONF_DIR &&  mkdir $HADOOP_CONF_DIR
-  test -d $ZOOKEEPER_HOME/conf && mkdir $ZOOKEEPER_HOME/conf
+  test -d $HADOOP_CONF_DIR ||  mkdir $HADOOP_CONF_DIR
+  test -d $ZOOKEEPER_HOME/conf || mkdir $ZOOKEEPER_HOME/conf
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
 
