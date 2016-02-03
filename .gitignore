@@ -3,3 +3,4 @@ data/*
 /accumulo*
 /hadoop*
 /zookeeper*
+*.iml

@@ -44,7 +44,7 @@ After installing it you should be able to reach your standard cloud urls:
 
 Options for using `cloud-local.sh` can be found by calling:
 
-    bin\cloud-local.sh help
+    bin/cloud-local.sh help
 
 ## Stopping and Starting
 
@@ -85,6 +85,30 @@ If you foobar your cloud, you can just delete everything and start over. You sho
     git pull
     git reset --hard
     bin/cloud-local.sh init
+
+### Changing ports
+
+You can change all of the ports by an offset, which you should probably only do when the cloud is turned off.
+With the cloud off, try the following:
+
+    cd $CLOUD_HOME
+    . bin/config.sh # to set appropriate _HOME variables, ok to skip if these are already set
+    . bin/ports.sh # bring the functions of ports into scope
+    set_ports [offset] # e.g., set_ports 27
+
+After that, you should be able to start your cloud back up, and all ports you would use
+(e.g., zookeeper, accumulo monitor, etc.) will be 27 larger than the default value. If you
+ever need to figure out what port things are on, the config files will have the in-use values.
+
+You can also initialize your cloud with a port offset. Before running init (or reconfigure),
+set the `CLOUD_LOCAL_PORT_OFFSET` variable to the offset you want. For example
+
+    export CLOUD_LOCAL_PORT_OFFSET=27
+
+Changing port offsets is supported by XML comments in the accumulo and hadoop config files.
+Removing or changing these comments (CL_port_default) will likely cause failures.
+
+It seems that negative offsets may work, just wrap them in parentheses (e.g., `set_ports '(-3)'`).
 
 ## Virtual Machine Help
 

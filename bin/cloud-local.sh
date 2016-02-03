@@ -22,31 +22,47 @@ fi
 # Stop: config
 
 # import port checking
-. "${bin}"/check_ports.sh
+. "${bin}"/ports.sh
 
 function download_packages() {
   # get stuff
   echo "Downloading packages from internet..."
-  mkdir ${CLOUD_HOME}/pkg # todo check to see if this exists
+  test -d ${CLOUD_HOME}/pkg || mkdir ${CLOUD_HOME}/pkg
   local mirror=${pkg_src_mirror}
   local maven=${pkg_src_maven}
 
-  declare -a urls=("${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
-                   "${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
-                   "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz") 
-  
-  for x in "${urls[@]}"; do
-      fname=$(basename "$x");
-      echo "fetching ${x}";
-      wget -O "${CLOUD_HOME}/pkg/${fname}" "$x";
-  done 
+  if [ -z "$CLOUD_LOCAL_PKGS" ]; then
+    declare -a urls=("${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
+                     "${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
+                     "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz")
+
+    for x in "${urls[@]}"; do
+        fname=$(basename "$x")
+        echo "fetching ${x}"
+        wget -O "${CLOUD_HOME}/pkg/${fname}" "$x"
+    done
+  else
+    declare -a urls=("${CLOUD_LOCAL_PKGS}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
+                     "${CLOUD_LOCAL_PKGS}/hadoop-${pkg_hadoop_ver}.tar.gz"
+                     "${CLOUD_LOCAL_PKGS}/zookeeper-${pkg_zookeeper_ver}.tar.gz")
+
+    for x in "${urls[@]}"; do
+        fname=$(basename "$x")
+        echo "fetching ${x}"
+        cp $x ${CLOUD_HOME}/pkg/${fname}
+    done
+  fi
 }
 
 function unpackage {
   echo "Unpackaging software..."
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
+  local TARG=xf
+  if [ -n "$CLOUD_LOCAL_VERBOSE" ]; then
+    TARG=xvf
+  fi
+  (cd -P "${CLOUD_HOME}" && tar $TARG "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz")
+  (cd -P "${CLOUD_HOME}" && tar $TARG "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
+  (cd -P "${CLOUD_HOME}" && tar $TARG "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
 }
 
 function configure {
@@ -56,17 +72,26 @@ function configure {
   sed -i "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#" ${CLOUD_HOME}/tmp/staging/*/*
   
   echo "Deploying config..."
-  test -d $HADOOP_CONF_DIR &&  mkdir $HADOOP_CONF_DIR
-  test -d $ZOOKEEPER_HOME/conf && mkdir $ZOOKEEPER_HOME/conf
+  test -d $HADOOP_CONF_DIR || mkdir $HADOOP_CONF_DIR
+  test -d $ZOOKEEPER_HOME/conf || mkdir $ZOOKEEPER_HOME/conf
+  test -d $ACCUMULO_HOME/conf || mkdir $ACCUMULO_HOME/conf
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
+
+  # create accumulo config
+  cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
+  # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
+  sed -i "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
+  cp ${CLOUD_HOME}/tmp/staging/accumulo/* $ACCUMULO_HOME/conf/
+
+  set_ports $(port_offset)
 
   rm ${CLOUD_HOME}/tmp/staging -rf
 }
 
 function start_first_time {
   # check ports
-  check_ports
+  check_ports $(port_offset)
 
   # start zk
   echo "Starting zoo..."
@@ -78,9 +103,12 @@ function start_first_time {
   
   # start hadoop
   echo "Starting hadoop..."
+  export HADOOP_PID_DIR=$HADOOP_HOME/../tmp # make this unique to each cloud-local
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start namenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start secondarynamenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start datanode
+
+  export YARN_PID_DIR=$HADOOP_HOME/../tmp
   $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
   $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
   
@@ -91,11 +119,6 @@ function start_first_time {
   # create user homedir
   echo "Creating hdfs path /user/$USER"
   $HADOOP_HOME/bin/hadoop fs -mkdir -p "/user/$USER"
-  
-  # create accumulo config
-  cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
-  # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
-  sed -i "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
 
   # init accumulo
   echo "Initializing accumulo"
@@ -108,7 +131,7 @@ function start_first_time {
 
 function start_cloud {
   # Check ports
-  check_ports
+  check_ports $(port_offset)
   
   # start zk
   echo "Starting zoo..."
@@ -116,9 +139,12 @@ function start_cloud {
   
   # start hadoop
   echo "Starting hadoop..."
+  export HADOOP_PID_DIR=$HADOOP_HOME/../tmp # make this unique to each cloud-local
   hadoop-daemon.sh --config $HADOOP_CONF_DIR start namenode
   hadoop-daemon.sh --config $HADOOP_CONF_DIR start secondarynamenode
   hadoop-daemon.sh --config $HADOOP_CONF_DIR start datanode
+
+  export YARN_PID_DIR=$HADOOP_HOME/../tmp
   yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
   yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
   
@@ -136,8 +162,10 @@ function stop_cloud {
   $ACCUMULO_HOME/bin/stop-all.sh
   
   echo "Stopping yarn and dfs..."
+  export YARN_PID_DIR=$HADOOP_HOME/../tmp
   $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop resourcemanager
   $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop nodemanager
+  export HADOOP_PID_DIR=$HADOOP_HOME/../tmp # make this unique to each cloud-local
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop namenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop secondarynamenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop datanode

@@ -4,4 +4,29 @@
         <name>mapreduce.framework.name</name>
         <value>yarn</value>
     </property>
+
+    <property>
+        <name>mapreduce.shuffle.port</name>
+        <value>13562</value> <!-- CL_port_default 13562 -->
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.address</name>
+        <value>0.0.0.0:10020</value> <!-- CL_port_default 10020 -->
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.webapp.address</name>
+        <value>0.0.0.0:19888</value> <!-- CL_port_default 19888 -->
+    </property>
+
+    <property>
+        <name>mapreduce.jobtracker.http.address</name>
+        <value>0.0.0.0:50030</value> <!-- CL_port_default 50030 -->
+    </property>
+
+    <property>
+        <name>mapreduce.tasktracker.http.address</name>
+        <value>0.0.0.0:50050</value> <!-- CL_port_default 50050 -->
+    </property>
 </configuration>
