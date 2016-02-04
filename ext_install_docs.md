@@ -1,15 +1,17 @@
-# UDEV Cloud Installation Logbook
+# cloud-local Extended Installation Documentation
 
-## Why deploy to Udev?
+Extended technologies used:
 
-It is the old pcloud, so there has to be some cloud there right??? There are two main reasons why I'm deploying to Udev, though all of this should work on any NUC. 
+1. Java 8 only
+2. Geomesa 1.2.x (Running on Accumulo/Kafka)
+2. Geoserver (Running on Wildfly/JBoss)
+3. Stealth (master branch) (Running on Wildfly/JBoss)
+4. Deployed to udev, a shared developer workspace. 
 
-1. Other people can hit these servers/services & it is more powerful than a NUC
-2. I can remote into it. (If the NUCs got ssh I would be very happy.
+## Deploying a full-ish cloud to Udev
+Deploying is fairly straight forward, as intended by ahulbs. I checked out a testing branch that also includes Kafka, since I use kafka so much. So there are some slight modifications that I found that were easy fixes, but can be frustrating for the first time cloud user. I know there is a fair bit of work going into cloud-local, so I will try to keep up with it with these docs. Especially because port configuration is up already as is I think wildfly instance in cloud-local.
 
-
-## Deploying Cloud Local to Udev
-Fairly straight forward, as intended by ahulbs. I checked out a testing branch that also includes Kafka, since I use kafka so much. So there are some slight modifications that I found that were easy fixes, but can be frustrating for the first time cloud user.
+## Start with cloud-local
 
 ```bash
 git clone git@github.com:ccri/cloud-local.git
@@ -35,12 +37,15 @@ The commands to run/stop cloud-local is simple /path/to/cloud-local/cloud-local.
 
 Minus the changes to the f_kafka branch, this is all documented at the [Github Page](https://github.com/ccri/cloud-local)
 
-
 ## Compiling GeoMesa (1.2.0-SNAPSHOT or later) with Java 8
 
 Very straight forward, though might take awhile to compile (10 minutes probably on the long side). I skipped tests for brevity.
 
-Note: Compiling with Java 8 seems to be a non-issue. However, it would appear that many things have been depreceated, which it catches and compiles correctly. If a move is made to make 8 the standard, then there might be some work to tidy that up. Again, it works just fine for 8 but 9 might break based on depreciated calls.
+**Note**: Compiling with Java 8 seems to be a non-issue. However, it would appear that many things have been depreceated, which it catches and compiles correctly. If a move is made to make 8 the standard, then there might be some work to tidy that up. Again, it works just fine for 8 but 9 might break based on depreciated calls.
+
+**Note**: Almost all of this can be followed in the *very* useful 1.2.x Geomesa Docs (Shoutout to zimmerman, I think?). It should all be here but these [docs](http://www.geomesa.org/documentation/test-readthedocs/user/installation_and_configuration.html) are very helpful as well.
+
+1. Download and build Geomesa 1.2.x
 
 ```bash 
 git clone https://github.com/locationtech/geomesa.git
@@ -52,18 +57,25 @@ mvn clean install -DskipTests=true
 
 Now this compiles *all* of geomesa, which is great for development and deployment in all forms. In most cases however we will only need the distribution produced in compilation.
 
-I rename our current geomesa folder to geomesa_src just so I can unpack the actual distribution as geomesa
+2. Setup up the distribution
+
+I renamed our current geomesa folder to geomesa_src just so I can unpack the actual distribution as Geomesa.
+
 ```bash
 mv geomesa geomesa_src
 tar -xvf geomesa_src/geomesa-dist/target/geomesa-1.2.0-SNAPSHOT-bin.tar.gz -C . # Unpack the dist
 mv geomesa-1.2.0-SNAPSHOT/ geomesa # Rename the folder for brevity
 ```
 
-Now we have a geomesa_src folder for updates / releases and we can simply unpack a new distribution as we recompile!
+Now we have a geomesa_src folder for updates / releases and we can simply unpack a new distribution each time we recompile! 
+
+**Note**: Updating requires you to reconfigure Geomesa as found below as well as replace the jar dependencies that are copied over. Proceed carefully.
+
+3. Configure Geomesa Tools 
 
 Unfortunately, we are not quite done. We now have to configure the geomesa-tools. So now we are going to unpack the geomesa-tools and configure!
 
-``bash
+```bash
 cd geomesa/dist/tools
 tar -xvf geomesa-tools-1.2.0-SNAPSHOT-bin.tar.gz
 cd geomesa-tools-1.2.0-SNAPSHOT/
@@ -74,6 +86,8 @@ bin/geomesa configure
 # export PATH=${GEOMESA_HOME}/bin:$PATH
 ```
 
+4. Install extra dependencies
+
 Now we have to install non-free dependencies. Easy enough by running:
 ```bash
 bin/install-jai
@@ -81,12 +95,16 @@ bin/install-jline
 bin/install-vecmath
 ```
 
+5. Configure Geomesa for multi-user environments
 I ran into this issue working on Udev with multiple geomesa deployments by multiple users. There is a fix upstream for geomesa, but you should check that this is correct if you are working on udev or multiuser environments.
+
+**Note**: This fix only fixes geomesa-tools and it does not fix the iterators. It is very possible that these will break if someone else owns the /tmp/Geotools folder. Understand that this could be an issue.
 
 Edit bin/geomesa.
 - Change: GEOMESA_OPTS="-Duser.timezone=UTC"
 - To: GEOMESA_OPTS="-Duser.timezone=UTC -DEPSG-HSQL.directory=/tmp/$(whoami)"
 
+6. Sanity check, run test-geomesa
 
 At this point, Geomesa should be ready to role! For a sanity check, there is a bin/test-geomesa script. You need to configure the script first. All the things in ALL_CAPS need to be set. Below is a list with values I put in:
 
@@ -114,11 +132,6 @@ cp geomesa/dist/accumulo/geomesa-accumulo-distributed-runtime-1.2.0-SNAPSHOT.jar
 ```
 
 That's it! Make sure to restart Accumulo
-
-
-
-This guide is mostly everything here: [GUIDE](http://www.geomesa.org/documentation/test-readthedocs/user/installation_and_configuration.html#install-geoserver-plugins)
-
 
 ## Setting up Wildfly 9.0.2
 
@@ -201,8 +214,8 @@ With 1.2.0 this is very easy. Mostly. We have to copy several jars from our inst
 
 ```bash
 cd /path/to/geomesa/dist/gs-plugins # Oh my, a whole folder just for Geoserver plugins
-tar -xzvf geomesa-accumulo-gs-plugin-1.2.0-SNAPSHOT-install.tar.gz -C ~/little-bam/wildfly/standalone/deployments/geoserver.war/WEB-INF/lib/
-tar -xzvf geomesa-kafka-gs-plugin-1.2.0-SNAPSHOT-install.tar.gz -C ~/little-bam/wildfly/standalone/deployments/geoserver.war/WEB-INF/lib/
+tar -xzvf geomesa-accumulo-gs-plugin-1.2.0-SNAPSHOT-install.tar.gz -C /path/to/wildfly/standalone/deployments/geoserver.war/WEB-INF/lib/
+tar -xzvf geomesa-kafka-gs-plugin-1.2.0-SNAPSHOT-install.tar.gz -C /path/to/wildfly/standalone/deployments/geoserver.war/WEB-INF/lib/
 # Now we need extra dependencies!
 # For Hadoop/Accumulo geomesa has a script for installing the necessary dependencies
 cd /path/to/geomesa/dist/tools/geomesa-tools-1.2.0-SNAPSHOT/bin
@@ -211,14 +224,14 @@ cd /path/to/geomesa/dist/tools/geomesa-tools-1.2.0-SNAPSHOT/bin
 # Now we need the Kafka depnedencies
 # Unfortunately, no nice script but you only need to copy some jars from our Kafka install
 cd /path/to/cloud-local/kafka_2.11-0.9.0.0/libs
-# Copy the following jars to ~/little-bam/wildfly/standalone/deployments/geoserver.war/WEB-INF/lib
+# Copy the following jars to /path/to/wildfly/standalone/deployments/geoserver.war/WEB-INF/lib
 # kafka-clients
 # kafka_2.11
 # metrics-core
 # zkclient
 # zookeeper
 # Example:
-cp kafka-clients-0.9.0.0.jar ~/little-bam/wildfly/standalone/deployments/geoserver.war/WEB-INF/lib/
+cp kafka-clients-0.9.0.0.jar /path/to/wildfly/standalone/deployments/geoserver.war/WEB-INF/lib/
 ```
 
 After you copy all of the jars, we need to make sure that Geoserver got everything you needed. If you restart Wildfly, then go to the Geoserver web page and login. Then click on the Add Stores link, on that page you should see under Vector Data Sources Accumulo (GeoMesa) and Kafka Data Store. 
