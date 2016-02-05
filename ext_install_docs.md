@@ -45,7 +45,7 @@ Very straight forward, though might take awhile to compile (10 minutes probably 
 
 **Note**: Almost all of this can be followed in the *very* useful 1.2.x Geomesa Docs (Shoutout to zimmerman, I think?). It should all be here but these [docs](http://www.geomesa.org/documentation/test-readthedocs/user/installation_and_configuration.html) are very helpful as well.
 
-1. Download and build Geomesa 1.2.x
+#### Download and build Geomesa 1.2.x
 
 ```bash 
 git clone https://github.com/locationtech/geomesa.git
@@ -57,7 +57,7 @@ mvn clean install -DskipTests=true
 
 Now this compiles *all* of geomesa, which is great for development and deployment in all forms. In most cases however we will only need the distribution produced in compilation.
 
-2. Setup up the distribution
+#### Setup up the distribution
 
 I renamed our current geomesa folder to geomesa_src just so I can unpack the actual distribution as Geomesa.
 
@@ -71,7 +71,7 @@ Now we have a geomesa_src folder for updates / releases and we can simply unpack
 
 **Note**: Updating requires you to reconfigure Geomesa as found below as well as replace the jar dependencies that are copied over. Proceed carefully.
 
-3. Configure Geomesa Tools 
+#### Configure Geomesa Tools 
 
 Unfortunately, we are not quite done. We now have to configure the geomesa-tools. So now we are going to unpack the geomesa-tools and configure!
 
@@ -86,7 +86,7 @@ bin/geomesa configure
 # export PATH=${GEOMESA_HOME}/bin:$PATH
 ```
 
-4. Install extra dependencies
+#### Install extra dependencies
 
 Now we have to install non-free dependencies. Easy enough by running:
 ```bash
@@ -95,7 +95,7 @@ bin/install-jline
 bin/install-vecmath
 ```
 
-5. Configure Geomesa for multi-user environments
+#### Configure Geomesa for multi-user environments
 I ran into this issue working on Udev with multiple geomesa deployments by multiple users. There is a fix upstream for geomesa, but you should check that this is correct if you are working on udev or multiuser environments.
 
 **Note**: This fix only fixes geomesa-tools and it does not fix the iterators. It is very possible that these will break if someone else owns the /tmp/Geotools folder. Understand that this could be an issue.
@@ -104,7 +104,7 @@ Edit bin/geomesa.
 - Change: GEOMESA_OPTS="-Duser.timezone=UTC"
 - To: GEOMESA_OPTS="-Duser.timezone=UTC -DEPSG-HSQL.directory=/tmp/$(whoami)"
 
-6. Sanity check, run test-geomesa
+#### Sanity check, run test-geomesa
 
 At this point, Geomesa should be ready to role! For a sanity check, there is a bin/test-geomesa script. You need to configure the script first. All the things in ALL_CAPS need to be set. Below is a list with values I put in:
 
@@ -259,7 +259,7 @@ cp stealth/webapp/target/stealth.war /path/to/wildfly/standalone/deployments/
 
 In order to config stealth post compile, we need Wildfly to read a TypeSafe Config file. So we need to set a system property in wildfly to read a config file, just for ease of changing configuration for stealth!
 
-1. Point Wildfly to config file
+#### Point Wildfly to config file
 
 ```bash
 nano /path/to/wildfly/standalone/configuration/standalone.xml
@@ -269,7 +269,7 @@ nano /path/to/wildfly/standalone/configuration/standalone.xml
 # </system-properties>
 ```
 
-2. Put stuff in the stealth.conf file
+#### Put stuff in the stealth.conf file
 
 ```bash
 nano /path/to/stealth/conf/file/stealth.conf
@@ -282,7 +282,7 @@ nano /path/to/stealth/conf/file/stealth.conf
 #}
 ```
 
-3. Restart Wildfly and Enjoy!
+#### Restart Wildfly and Enjoy!
 
 
 
