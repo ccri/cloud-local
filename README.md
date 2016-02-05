@@ -46,6 +46,9 @@ There are a few other commands:
 * ```bin/cloud-local.sh start``` - Start the cloud (make sure it isn't running). Note that if existing ports are bound to the ports needed for cloud local an error message will be printed and the script will stop
 * ```bin/cloud-local.sh stop``` - Stop the cloud safely...hopefully
 
+## Extended Installation
+
+To install GeoMesa 1.2, with Stealth and GeoServer on WildFly: see the [extended installation documentation](ext_install_docs.md).
 
 ## Maintenance
 
