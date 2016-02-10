@@ -42,6 +42,8 @@ function validate_config {
 
 function set_env_vars {
   export ZOOKEEPER_HOME="${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
+
+  export KAFKA_HOME="${CLOUD_HOME}/kafka_2.11-${pkg_kafka_ver}"
   
   export HADOOP_HOME="$CLOUD_HOME/hadoop-${pkg_hadoop_ver}"
   export HADOOP_PREFIX="${HADOOP_HOME}"
@@ -54,7 +56,7 @@ function set_env_vars {
 
   export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
   
-  export PATH=$ZOOKEEPER_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$PATH
+  export PATH=$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$PATH
 }
 
 if [[ -z "$JAVA_HOME" ]];then

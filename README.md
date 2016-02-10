@@ -20,6 +20,7 @@ This init script does several things:
 * create a user homedir in hdfs
 * initialize accumulo
 * start up zookeeper, hadoop, and accumulo
+* start kafka broker
 
 After running `init` source the variables in your bashrc or other shell:
 
