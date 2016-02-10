@@ -10,6 +10,8 @@ function check_port {
 
 function check_ports {
   check_port 2181  # zookeeper
+
+  check_port 9092  # kafka broker
   
   # hadoop
   check_port 50010 # dfs.datanode.address
