@@ -99,7 +99,7 @@ function start_first_time {
 
   # init accumulo
   echo "Initializing accumulo"
-  $ACCUMULO_HOME/bin/accumulo init
+  $ACCUMULO_HOME/bin/accumulo init --instance-name $cl_acc_inst_name --password $cl_acc_inst_pass
   
   # starting accumulo
   echo "starting accumulo..."
