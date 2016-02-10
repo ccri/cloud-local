@@ -1,5 +1,5 @@
-/data/*
 /pkg/*
+data/*
 *.tar.gz
 /accumulo*
 /hadoop*

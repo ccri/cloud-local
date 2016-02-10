@@ -47,9 +47,13 @@ function set_env_vars {
   
   export HADOOP_HOME="$CLOUD_HOME/hadoop-${pkg_hadoop_ver}"
   export HADOOP_PREFIX="${HADOOP_HOME}"
-  export YARN_HOME="${HADOOP_HOME}"
   export HADOOP_CONF_DIR="${HADOOP_PREFIX}/etc/hadoop"
-  
+  export HADOOP_COMMON_HOME="${HADOOP_HOME}"
+  export HADOOP_HDFS_HOME="${HADOOP_HOME}"
+  export HADOOP_YARN_HOME="${HADOOP_HOME}"
+
+  export YARN_HOME="${HADOOP_HOME}" 
+
   export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
   
   export PATH=$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$PATH
