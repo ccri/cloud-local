@@ -186,7 +186,7 @@ mv geoserver geoserver.war # I rename it the war file just for keeping it what i
 touch geoserver.war.dodeploy # Let Wildfly know to deploy this war file
 ```
 
-Now we need to configure Geoserver. It is fairly straight forward.
+Now we need to configure Geoserver. It is fairly straight forward. Be sure the GEOSERVER_DATA_DIR exists on your file system.
 
 ```bash
 cd /path/to/wildfly/standalone/configuration
@@ -305,7 +305,7 @@ nano /path/to/stealth/conf/file/stealth.conf
 # stealth {
 #  geoserver {
 #    defaultUrl = "http://localhost:8080/geoserver"
-#    omitProxy = false
+#    omitProxy = true
 #  }
 #}
 ```
