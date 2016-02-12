@@ -33,7 +33,8 @@ function download_packages() {
 
   declare -a urls=("${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
                    "${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
-                   "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz") 
+                   "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
+                   "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
   
   for x in "${urls[@]}"; do
       fname=$(basename "$x");
@@ -47,6 +48,7 @@ function unpackage {
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
+  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
 }
 
 function configure {
@@ -58,8 +60,10 @@ function configure {
   echo "Deploying config..."
   test -d $HADOOP_CONF_DIR ||  mkdir $HADOOP_CONF_DIR
   test -d $ZOOKEEPER_HOME/conf || mkdir $ZOOKEEPER_HOME/conf
+  test -d $KAFKA_HOME/config || mkdir $KAFKA_HOME/config
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
+  cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
 
   rm ${CLOUD_HOME}/tmp/staging -rf
 }
@@ -71,6 +75,10 @@ function start_first_time {
   # start zk
   echo "Starting zoo..."
   $ZOOKEEPER_HOME/bin/zkServer.sh start
+
+  # start kafka
+  echo "Starting kafka..." 
+  $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
   
   # format namenode
   echo "Formatting namenode..."
@@ -113,6 +121,9 @@ function start_cloud {
   # start zk
   echo "Starting zoo..."
   zkServer.sh start
+
+  echo "Starting kafka..."
+  $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
   
   # start hadoop
   echo "Starting hadoop..."
@@ -132,6 +143,10 @@ function start_cloud {
 }
 
 function stop_cloud {
+
+  echo "Stopping kafka..."
+  $KAFKA_HOME/bin/kafka-server-stop.sh
+
   echo "Stopping accumulo..."
   $ACCUMULO_HOME/bin/stop-all.sh
   
@@ -141,8 +156,8 @@ function stop_cloud {
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop namenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop secondarynamenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop datanode
-  
-  echo "stopping zookeeper"
+ 
+  echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 }
 
@@ -150,7 +165,9 @@ function clear_sw {
   rm "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}" -rf
   rm "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}" -rf
   rm "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}" -rf
+  rm "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}" -rf
   rm "${CLOUD_HOME}/tmp" -rf
+  if [ -a zookeeper.out ]; then rm zookeeper.out; fi #hahahaha
 }
 
 function clear_data {
@@ -159,6 +176,7 @@ function clear_data {
   rm ${CLOUD_HOME}/data/zookeeper/* -rf
   rm ${CLOUD_HOME}/data/dfs/data/* -rf
   rm ${CLOUD_HOME}/data/dfs/name/* -rf
+  if [ -d "${CLOUD_HOME}/data/kafka-logs" ]; then rm ${CLOUD_HOME}/data/kafka-logs -rf; fi # intentionally to clear dot files
 }
 
 function show_help {

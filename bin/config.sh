@@ -32,6 +32,8 @@ function validate_config {
     pkg_error="Invalid zookeeper version: '${pkg_zookeeper_ver}'"
   elif [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.]6[.]. ]]; then
     pkg_error="Invalid accumulo version: '${pkg_accumulo_ver}'"
+  elif [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ 0[.]9[.].+ ]]; then
+    pkg_error="Invalid kafka version: '${pkg_kafka_ver}'"
   fi
   
   if [[ ! -z "$pkg_error" ]]; then
@@ -42,6 +44,8 @@ function validate_config {
 
 function set_env_vars {
   export ZOOKEEPER_HOME="${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
+
+  export KAFKA_HOME="${CLOUD_HOME}/kafka_2.11-${pkg_kafka_ver}"
   
   export HADOOP_HOME="$CLOUD_HOME/hadoop-${pkg_hadoop_ver}"
   export HADOOP_PREFIX="${HADOOP_HOME}"
@@ -54,7 +58,7 @@ function set_env_vars {
 
   export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
   
-  export PATH=$ZOOKEEPER_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$PATH
+  export PATH=$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$PATH
 }
 
 if [[ -z "$JAVA_HOME" ]];then
