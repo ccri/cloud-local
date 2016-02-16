@@ -19,7 +19,7 @@ fi
 
 if [ ! -d "${CLOUD_HOME}" ]; then
   echo "CLOUD_HOME=${CLOUD_HOME} is not a valid directory. Please make sure it exists"
-  exit 1
+  return 1
 fi
 
 function validate_config {
@@ -38,7 +38,7 @@ function validate_config {
   
   if [[ ! -z "$pkg_error" ]]; then
     echo "ERROR: ${pkg_error}"
-    exit 1
+    return 1
   fi
 }
 
@@ -62,8 +62,8 @@ function set_env_vars {
 }
 
 if [[ -z "$JAVA_HOME" ]];then
-  echo "must set JAVA_HOME..."
-  exit 1
+  echo "ERROR: must set JAVA_HOME..."
+  return 1
 fi
 
 # load configuration scripts
