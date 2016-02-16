@@ -12,7 +12,7 @@ When using this the first time...
     cd cloud-local
     bin/cloud-local.sh init
 
-You'll be prompted to enter the accumulo instance name and pasword...(hint: try "local" and "secret")
+Cloud local sets a default accumulo instance name of "local" and password of "secret" which can be modified by editing the `conf/cloud-local.conf` file. If you want to change this you'll need to stop, clean, and reconfigure.
 
 This init script does several things:
 * configure HDFS configuration files
