@@ -32,4 +32,5 @@
         <name>dfs.data.dir</name>
         <value>LOCAL_CLOUD_PREFIX/data/dfs/data</value>
     </property>
+
 </configuration>

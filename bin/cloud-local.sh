@@ -104,11 +104,17 @@ function start_first_time {
   cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
   # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
   sed -i "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
+ 
+  # sleep 
+  sleep 3
 
   # init accumulo
   echo "Initializing accumulo"
   $ACCUMULO_HOME/bin/accumulo init --instance-name $cl_acc_inst_name --password $cl_acc_inst_pass
   
+  # sleep 3
+  sleep 3
+
   # starting accumulo
   echo "starting accumulo..."
   $ACCUMULO_HOME/bin/start-all.sh
@@ -176,6 +182,7 @@ function clear_data {
   rm ${CLOUD_HOME}/data/zookeeper/* -rf
   rm ${CLOUD_HOME}/data/dfs/data/* -rf
   rm ${CLOUD_HOME}/data/dfs/name/* -rf
+  rm ${CLOUD_HOME}/data/hadoop/tmp/* -rf
   if [ -d "${CLOUD_HOME}/data/kafka-logs" ]; then rm ${CLOUD_HOME}/data/kafka-logs -rf; fi # intentionally to clear dot files
 }
 
