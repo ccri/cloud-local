@@ -1,18 +1,24 @@
 #!/bin/bash
 
-# build docker image
-cd docker/
-docker build -t ccri/cloud-local .
+# build docker image; do this the first time at least, it caches so doesn't slow you down much to build every time
+cd docker
+docker build -t ccri/cloud-local ..
 
-# ensure access to $CLOUD_HOME
-cd ..
-source bin/config.sh
 
-# run new container from image in terminal mode, attaching cloud-local repo as read only volume 
+# run new container from image in terminal mode
 # you can optionally pass in --name mycontainername
-docker run -t -i  -v $CLOUD_HOME:/opt/cloud-local:ro  ccri/cloud-local /bin/bash
+# Start the container, get the ID
+CONTAINER="$(docker run -itdP ccri/cloud-local)"
+# Start cloud-local in the container
+docker exec $CONTAINER /opt/cloud-local/bin/cloud-local.sh reconfigure
 
-# When container starts, to launch cloud-local:
-# root@id:/# git clone /opt/cloud-local
-# root@id:/# cd /opt/cloud-local
-# root@id:/# bin/cloud-local.sh init
+# Print running docker containers - includes port mappings into container
+docker ps
+
+# attach to new container
+docker attach $CONTAINER
+
+# For most things you will need to configure environment variables:
+# root@id:/# source /opt/cloud-local/bin/config.sh
+
+# Then CTRL+P CTRL+Q to exit running container as needed; docker attach to get back in
