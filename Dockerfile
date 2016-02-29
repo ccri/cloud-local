@@ -38,4 +38,6 @@ EXPOSE 19888
 EXPOSE 8080
 
 # Launch cloud-local, using reconfigure (assumes proper targz's are in $CLOUD_HOME/pkg)
-CMD /opt/cloud-local/bin/cloud-local.sh reconfigure
+#RUN /opt/cloud-local/bin/cloud-local.sh reconfigure; \
+#    /opt/cloud-local/bin/config.sh; \
+#    /bin/sh -c bash
