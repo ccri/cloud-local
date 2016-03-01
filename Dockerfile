@@ -30,11 +30,15 @@ ADD templates/kafka/* /opt/cloud-local/templates/kafka/
 # Add targzs at time of build... #TODO extract these from /conf ?
 ADD pkg/ /opt/cloud-local/pkg
 
+# Add geomesa 1.2.0 goodies
+ADD http://repo.locationtech.org/content/repositories/geomesa-releases/org/locationtech/geomesa/geomesa-dist/1.2.0/geomesa-dist-1.2.0-bin.tar.gz /opt/cloud-local/pkg
+
 # Expose ports for common cloud urls: accumulo master, hadoop dfs, yarn, mr job history, generic web
 EXPOSE 50095
 EXPOSE 50070
 EXPOSE 8088
 EXPOSE 19888
+EXPOSE 8042
 EXPOSE 8080
 
 # Launch cloud-local, using reconfigure (assumes proper targz's are in $CLOUD_HOME/pkg)
