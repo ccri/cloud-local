@@ -35,6 +35,7 @@ function download_packages() {
                    "${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
                    "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
                    "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
+                   "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-hadoop${pkg_hadoop_ver}.tgz")
   
   for x in "${urls[@]}"; do
       fname=$(basename "$x");
@@ -49,6 +50,7 @@ function unpackage {
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
+  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-hadoop${pkg_hadoop_ver}.tgz")
 }
 
 function configure {
