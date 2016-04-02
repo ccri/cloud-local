@@ -57,6 +57,8 @@ function set_env_vars {
   export YARN_HOME="${HADOOP_HOME}" 
 
   export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
+
+  export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}"
   
   export PATH=$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$PATH
 }
