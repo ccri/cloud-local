@@ -184,6 +184,7 @@ function clear_sw {
   rm "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}" -rf
   rm "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}" -rf
   rm "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}" -rf
+  rm "${CLOUD_HOME}/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}" -rf
   rm "${CLOUD_HOME}/tmp" -rf
   if [ -a zookeeper.out ]; then rm zookeeper.out; fi #hahahaha
 }
