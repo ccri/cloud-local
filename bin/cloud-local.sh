@@ -150,6 +150,11 @@ function start_cloud {
   $ACCUMULO_HOME/bin/start-all.sh
 }
 
+function start_yarn {
+  yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
+  yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+}
+
 function stop_cloud {
 
   echo "Stopping kafka..."
@@ -167,6 +172,11 @@ function stop_cloud {
  
   echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
+}
+
+function stop_yarn {
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop resourcemanager
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop nodemanager
 }
 
 function clear_sw {
@@ -215,6 +225,11 @@ elif [[ $1 == 'stop' ]]; then
   echo "Stopping Cloud..."
   stop_cloud
   echo "Cloud stopped"
+elif [[ $1 == 'reyarn' ]]; then
+  echo "Stopping Yarn..."
+  stop_yarn
+  echo "Starting Yarn..."
+  start_yarn
 else
   show_help
 fi
