@@ -43,7 +43,10 @@ function check_ports {
   check_port 50091 # accumulo gc
   check_port 9999  # accumulo master
   check_port 12234 # accumulo tracer
-  
+
+  # spark
+  check_port 4040 # Spark job monitor
+
   echo "Known ports are OK"
 }
 
