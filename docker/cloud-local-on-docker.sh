@@ -4,7 +4,7 @@
 cd docker
 docker build -t ccri/cloud-local -f Dockerfile ..
 # alternatively you can build a centos 6 flavored image
-docker build -t ccri/cloud-local:centos6 -f centosDockerfile ..
+docker build -t ccri/cloud-local:centos6 -f centos.Dockerfile ..
 
 
 # run new container from image in terminal mode
@@ -21,8 +21,5 @@ docker ps
 
 # attach to new container
 docker attach $CONTAINER
-
-# For most things you will need to configure environment variables:
-# root@id:/# source /opt/cloud-local/bin/config.sh
 
 # Then CTRL+P CTRL+Q to exit running container as needed; docker attach to get back in

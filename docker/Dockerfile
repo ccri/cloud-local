@@ -19,8 +19,7 @@ RUN \
 # Define JAVA_HOME variable
 ENV JAVA_HOME /usr/lib/jvm/java-7-oracle
 
-#TODO set cloud home
-
+# Get cloud-local
 ADD bin/* /opt/cloud-local/bin/
 ADD conf/* /opt/cloud-local/conf/
 ADD templates/hadoop/* /opt/cloud-local/templates/hadoop/
@@ -30,8 +29,11 @@ ADD templates/kafka/* /opt/cloud-local/templates/kafka/
 # Add targzs at time of build... #TODO extract these from /conf ?
 ADD pkg/ /opt/cloud-local/pkg
 
+# Set cloud home and hadoop vars
+RUN echo "source /opt/cloud-local/bin/config.sh" >> /root/.bashrc
+
 # Add geomesa 1.2.0 goodies
-ADD http://repo.locationtech.org/content/repositories/geomesa-releases/org/locationtech/geomesa/geomesa-dist/1.2.0/geomesa-dist-1.2.0-bin.tar.gz /opt/cloud-local/pkg
+#ADD http://repo.locationtech.org/content/repositories/geomesa-releases/org/locationtech/geomesa/geomesa-dist/1.2.0/geomesa-dist-1.2.0-bin.tar.gz /opt/cloud-local/pkg
 
 # Expose ports for common cloud urls: accumulo master, hadoop dfs, yarn, mr job history, generic web
 EXPOSE 50095
@@ -43,5 +45,4 @@ EXPOSE 8080
 
 # Launch cloud-local, using reconfigure (assumes proper targz's are in $CLOUD_HOME/pkg)
 #RUN /opt/cloud-local/bin/cloud-local.sh reconfigure; \
-#    /opt/cloud-local/bin/config.sh; \
 #    /bin/sh -c bash
