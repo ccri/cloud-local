@@ -3,9 +3,9 @@ MAINTAINER Jason Brown <jason.brown@ccri.com>
 
 RUN yum update -y && \ 
     yum install -y wget && \
-    wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/7u80-b15/jre-7u80-linux-x64.rpm" && \
-    yum localinstall -y /jre-7u80-linux-x64.rpm && \
-    rm -f /jre-7u80-linux-x64.rpm 
+    wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/7u80-b15/jdk-7u80-linux-x64.rpm" && \
+    yum localinstall -y /jdk-7u80-linux-x64.rpm && \
+    rm -f /jdk-7u80-linux-x64.rpm 
 
 RUN yum install -y curl git man unzip vim 
 RUN yum clean all
@@ -13,8 +13,7 @@ RUN yum clean all
 # Define JAVA_HOME variable
 ENV JAVA_HOME /usr/java/default
 
-#TODO set cloud home
-
+# Get cloud-local
 ADD bin/* /opt/cloud-local/bin/
 ADD conf/* /opt/cloud-local/conf/
 ADD templates/hadoop/* /opt/cloud-local/templates/hadoop/
@@ -23,6 +22,10 @@ ADD templates/kafka/* /opt/cloud-local/templates/kafka/
 
 # Add targzs at time of build... #TODO extract these from /conf ?
 ADD pkg/ /opt/cloud-local/pkg
+
+
+# Set cloud home and hadoop vars
+RUN echo "source /opt/cloud-local/bin/config.sh" >> /root/.bashrc
 
 # Add geomesa 1.2.0 goodies
 # ADD http://repo.locationtech.org/content/repositories/geomesa-releases/org/locationtech/geomesa/geomesa-dist/1.2.0/geomesa-dist-1.2.0-bin.tar.gz /opt/cloud-local/pkg
@@ -37,5 +40,4 @@ EXPOSE 8080
 
 # Launch cloud-local, using reconfigure (assumes proper targz's are in $CLOUD_HOME/pkg)
 #RUN /opt/cloud-local/bin/cloud-local.sh reconfigure; \
-#    /opt/cloud-local/bin/config.sh; \
 #    /bin/sh -c bash
