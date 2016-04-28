@@ -21,4 +21,9 @@
         <name>yarn.nodemanager.local-dirs</name>
         <value>LOCAL_CLOUD_PREFIX/data/yarn</value>
     </property>
+
+    <property>
+        <name>yarn.nodemanager.vmem-check-enabled</name>
+        <value>false</value>
+    </property>
 </configuration>
