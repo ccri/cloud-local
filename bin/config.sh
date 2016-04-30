@@ -22,6 +22,9 @@ if [ ! -d "${CLOUD_HOME}" ]; then
   return 1
 fi
 
+# [Tab] shell completion because i'm lazy
+IFS=$'\n' complete -W "init start stop reconfigure clean help" cloud-local.sh
+
 function validate_config {
   # todo validate versions?
   # allowed versions are hadoop 2.6.x, zk 3.4.6, acc 1.6.x
