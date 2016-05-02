@@ -27,11 +27,11 @@ IFS=$'\n' complete -W "init start stop reconfigure clean help" cloud-local.sh
 
 function validate_config {
   # todo validate versions?
-  # allowed versions are hadoop 2.6.x, zk 3.4.6, acc 1.6.x
+  # allowed versions are hadoop 2.[567].x, zk 3.4.[56], acc 1.6.x
   local pkg_error=""
-  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.]6[.]. ]]; then
+  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.][567][.]. ]]; then
     pkg_error="Invalid hadoop version: '${pkg_hadoop_ver}'"
-  elif [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.]6 ]]; then
+  elif [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.][56] ]]; then
     pkg_error="Invalid zookeeper version: '${pkg_zookeeper_ver}'"
   elif [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.]6[.]. ]]; then
     pkg_error="Invalid accumulo version: '${pkg_accumulo_ver}'"
@@ -42,6 +42,8 @@ function validate_config {
   if [[ ! -z "$pkg_error" ]]; then
     echo "ERROR: ${pkg_error}"
     return 1
+  else
+    return 0
   fi
 }
 

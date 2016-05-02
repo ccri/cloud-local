@@ -15,6 +15,13 @@ script=$( basename "${SOURCE}" )
 # Start: config
 . "${bin}"/config.sh
 
+# Check config
+if ! validate_config; then
+  echo "Invalid configuration"
+  exit 1
+fi
+
+# check java home
 if [[ -z "$JAVA_HOME" ]];then
   echo "must set JAVA_HOME..."
   exit 1
