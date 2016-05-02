@@ -67,6 +67,9 @@ function configure {
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
   cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
 
+  # If Spark doesn't have log4j settings, use the Spark defaults
+  test -f $SPARK_HOME/conf/log4j.properties || cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
+
   rm -rf ${CLOUD_HOME}/tmp/staging
 }
 
