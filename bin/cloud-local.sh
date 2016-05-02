@@ -79,7 +79,7 @@ function start_first_time {
 
   # start zk
   echo "Starting zoo..."
-  $ZOOKEEPER_HOME/bin/zkServer.sh start
+  (cd $CLOUD_HOME; $ZOOKEEPER_HOME/bin/zkServer.sh start)
 
   # start kafka
   echo "Starting kafka..." 
@@ -131,7 +131,7 @@ function start_cloud {
   
   # start zk
   echo "Starting zoo..."
-  zkServer.sh start
+  (cd $CLOUD_HOME ; zkServer.sh start)
 
   echo "Starting kafka..."
   $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
@@ -189,7 +189,7 @@ function clear_sw {
   rm -rf "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
   rm -rf "${CLOUD_HOME}/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}"
   rm -rf "${CLOUD_HOME}/tmp"
-  if [ -a zookeeper.out ]; then rm zookeeper.out; fi #hahahaha
+  if [ -a "${CLOUD_HOME}/zookeeper.out" ]; then rm "${CLOUD_HOME}/zookeeper.out"; fi #hahahaha
 }
 
 function clear_data {
