@@ -55,7 +55,7 @@ function configure {
   mkdir -p "${CLOUD_HOME}/tmp/staging"
   cp -r ${CLOUD_HOME}/templates/* ${CLOUD_HOME}/tmp/staging/
   ## Substitute env vars
-  sed -i "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#" ${CLOUD_HOME}/tmp/staging/*/*
+  sed -i~orig "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#" ${CLOUD_HOME}/tmp/staging/*/*
   
   echo "Deploying config..."
   test -d $HADOOP_CONF_DIR ||  mkdir $HADOOP_CONF_DIR
@@ -65,7 +65,7 @@ function configure {
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
   cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
 
-  rm ${CLOUD_HOME}/tmp/staging -rf
+  rm -rf ${CLOUD_HOME}/tmp/staging
 }
 
 function start_first_time {
@@ -74,7 +74,7 @@ function start_first_time {
 
   # start zk
   echo "Starting zoo..."
-  $ZOOKEEPER_HOME/bin/zkServer.sh start
+  (cd $CLOUD_HOME; $ZOOKEEPER_HOME/bin/zkServer.sh start)
 
   # start kafka
   echo "Starting kafka..." 
@@ -103,7 +103,7 @@ function start_first_time {
   # create accumulo config
   cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
   # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
-  sed -i "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
+  sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
  
   # sleep 
   sleep 3
@@ -126,7 +126,7 @@ function start_cloud {
   
   # start zk
   echo "Starting zoo..."
-  zkServer.sh start
+  (cd $CLOUD_HOME ; zkServer.sh start)
 
   echo "Starting kafka..."
   $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
@@ -168,22 +168,22 @@ function stop_cloud {
 }
 
 function clear_sw {
-  rm "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}" -rf
-  rm "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}" -rf
-  rm "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}" -rf
-  rm "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}" -rf
-  rm "${CLOUD_HOME}/tmp" -rf
-  if [ -a zookeeper.out ]; then rm zookeeper.out; fi #hahahaha
+  rm -rf "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}"
+  rm -rf "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}"
+  rm -rf "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
+  rm -rf "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
+  rm -rf "${CLOUD_HOME}/tmp"
+  if [ -a "${CLOUD_HOME}/zookeeper.out" ]; then rm "${CLOUD_HOME}/zookeeper.out"; fi #hahahaha
 }
 
 function clear_data {
   # TODO prompt
-  rm ${CLOUD_HOME}/data/yarn/* -rf
-  rm ${CLOUD_HOME}/data/zookeeper/* -rf
-  rm ${CLOUD_HOME}/data/dfs/data/* -rf
-  rm ${CLOUD_HOME}/data/dfs/name/* -rf
-  rm ${CLOUD_HOME}/data/hadoop/tmp/* -rf
-  if [ -d "${CLOUD_HOME}/data/kafka-logs" ]; then rm ${CLOUD_HOME}/data/kafka-logs -rf; fi # intentionally to clear dot files
+  rm -rf ${CLOUD_HOME}/data/yarn/*
+  rm -rf ${CLOUD_HOME}/data/zookeeper/*
+  rm -rf ${CLOUD_HOME}/data/dfs/data/*
+  rm -rf ${CLOUD_HOME}/data/dfs/name/*
+  rm -rf ${CLOUD_HOME}/data/hadoop/tmp/*
+  if [ -d "${CLOUD_HOME}/data/kafka-logs" ]; then rm -rf ${CLOUD_HOME}/data/kafka-logs; fi # intentionally to clear dot files
 }
 
 function show_help {
