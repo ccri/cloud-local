@@ -35,7 +35,7 @@ function download_packages() {
   # get stuff
   echo "Downloading packages from internet..."
   mkdir ${CLOUD_HOME}/pkg # todo check to see if this exists
-  local mirror=${pkg_src_mirror}
+  local mirror=$(curl 'https://www.apache.org/dyn/closer.cgi' |   grep -o '<strong>[^<]*</strong>' |   sed 's/<[^>]*>//g' |   head -1)
   local maven=${pkg_src_maven}
 
   declare -a urls=("${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
