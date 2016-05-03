@@ -28,12 +28,13 @@ function download_packages() {
   # get stuff
   echo "Downloading packages from internet..."
   mkdir ${CLOUD_HOME}/pkg # todo check to see if this exists
+  local archive=${pkg_src_archive}
   local mirror=${pkg_src_mirror}
   local maven=${pkg_src_maven}
 
   declare -a urls=("${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
-                   "${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
-                   "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
+                   "${archive}/dist/hadoop/core/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
+                   "${archive}/dist/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
                    "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
   
   for x in "${urls[@]}"; do

@@ -26,15 +26,15 @@ function validate_config {
   # todo validate versions?
   # allowed versions are hadoop 2.6.x, zk 3.4.6, acc 1.6.x
   local pkg_error=""
-  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.]6[.]. ]]; then
-    pkg_error="Invalid hadoop version: '${pkg_hadoop_ver}'"
-  elif [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.]6 ]]; then
-    pkg_error="Invalid zookeeper version: '${pkg_zookeeper_ver}'"
-  elif [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.]6[.]. ]]; then
-    pkg_error="Invalid accumulo version: '${pkg_accumulo_ver}'"
-  elif [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ 0[.]9[.].+ ]]; then
-    pkg_error="Invalid kafka version: '${pkg_kafka_ver}'"
-  fi
+  #if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.]6[.]. ]]; then
+  #  pkg_error="Invalid hadoop version: '${pkg_hadoop_ver}'"
+  #elif [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.]6 ]]; then
+  #  pkg_error="Invalid zookeeper version: '${pkg_zookeeper_ver}'"
+  #elif [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.]6[.]. ]]; then
+  #  pkg_error="Invalid accumulo version: '${pkg_accumulo_ver}'"
+  #elif [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ 0[.]9[.].+ ]]; then
+  #  pkg_error="Invalid kafka version: '${pkg_kafka_ver}'"
+  #fi
   
   if [[ ! -z "$pkg_error" ]]; then
     echo "ERROR: ${pkg_error}"
@@ -45,7 +45,7 @@ function validate_config {
 function set_env_vars {
   export ZOOKEEPER_HOME="${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
 
-  export KAFKA_HOME="${CLOUD_HOME}/kafka_2.11-${pkg_kafka_ver}"
+  export KAFKA_HOME="${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
   
   export HADOOP_HOME="$CLOUD_HOME/hadoop-${pkg_hadoop_ver}"
   export HADOOP_PREFIX="${HADOOP_HOME}"
