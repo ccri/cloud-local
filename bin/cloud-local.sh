@@ -103,7 +103,7 @@ function start_first_time {
   # create accumulo config
   cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
   # if we have a dns entry, change masters and slaves from localhost
-  if [ -z nslookup ${HOSTNAME}.ccri.com | grep -i "server can't find" ]; then
+  if ! nslookup ${HOSTNAME}.ccri.com | grep -i "server can't find" ; then
     sed -i~orig "s/^localhost/${HOSTNAME}.ccri.com/" "${ACCUMULO_HOME}/conf/masters"
     sed -i~orig "s/^localhost/${HOSTNAME}.ccri.com/" "${ACCUMULO_HOME}/conf/slaves"
   fi
