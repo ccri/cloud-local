@@ -102,6 +102,11 @@ function start_first_time {
   
   # create accumulo config
   cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
+  # if we have a dns entry, change masters and slaves from localhost
+  if [ -z nslookup ${HOSTNAME}.ccri.com | grep -i "server can't find" ]; then
+    sed -i~orig "s/^localhost/${HOSTNAME}.ccri.com/" "${ACCUMULO_HOME}/conf/masters"
+    sed -i~orig "s/^localhost/${HOSTNAME}.ccri.com/" "${ACCUMULO_HOME}/conf/slaves"
+  fi
   # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
   sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
  
