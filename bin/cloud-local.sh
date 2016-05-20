@@ -141,8 +141,7 @@ function start_cloud {
   hadoop-daemon.sh --config $HADOOP_CONF_DIR start namenode
   hadoop-daemon.sh --config $HADOOP_CONF_DIR start secondarynamenode
   hadoop-daemon.sh --config $HADOOP_CONF_DIR start datanode
-  yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
-  yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+  start_yarn
   
   # Wait for HDFS to exit safemode:
   echo "Waiting for HDFS to exit safemode..."
@@ -154,8 +153,8 @@ function start_cloud {
 }
 
 function start_yarn {
-  yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
-  yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
 }
 
 function stop_cloud {
@@ -167,8 +166,7 @@ function stop_cloud {
   $ACCUMULO_HOME/bin/stop-all.sh
   
   echo "Stopping yarn and dfs..."
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop resourcemanager
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop nodemanager
+  stop_yarn
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop namenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop secondarynamenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop datanode
@@ -203,7 +201,7 @@ function clear_data {
 }
 
 function show_help {
-  echo "Provide 1 command: (init|start|stop|reconfigure|clean|help)"
+  echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|clean|help)"
 }
 
 if [ "$#" -ne 1 ]; then
