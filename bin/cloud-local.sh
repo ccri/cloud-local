@@ -22,7 +22,7 @@ if ! validate_config; then
 fi
 
 # check java home
-if [[ -z "$JAVA_HOME" ]];then
+if [[ -z "$JAVA_HOME" ]]; then
   echo "must set JAVA_HOME..."
   exit 1
 fi
@@ -61,7 +61,7 @@ function download_packages() {
 
 function unpackage {
   local targs
-  if [[ -n "${cl_verbose}" && "${cl_verbose}" == "1" ]]; then
+  if [[ "${CL_VERBOSE}" == "1" ]]; then
     targs="xvf"
   else
     targs="xf"
@@ -79,15 +79,26 @@ function configure {
   mkdir -p "${CLOUD_HOME}/tmp/staging"
   cp -r ${CLOUD_HOME}/templates/* ${CLOUD_HOME}/tmp/staging/
 
+  # accumulo config before substitutions
+  cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
+
   ## Substitute env vars
   sed -i~orig "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#" ${CLOUD_HOME}/tmp/staging/*/*
-  sed -i~orig "s#CLOUD_LOCAL_HOSTNAME#${cl_hostname}#" ${CLOUD_HOME}/tmp/staging/*/*
+  sed -i~orig "s#CLOUD_LOCAL_HOSTNAME#${CL_HOSTNAME}#" ${CLOUD_HOME}/tmp/staging/*/*
  
   # accumulo config
-  cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
   # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
   sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
- 
+  echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/gc
+  echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/masters
+  echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/slaves
+  echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/monitor
+  echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/tracers
+
+  # hadoop slaves file
+  echo "${CL_HOSTNAME}" > ${CLOUD_HOME}/tmp/staging/hadoop/slaves
+
+
   # deploy from staging
   echo "Deploying config from staging..."
   test -d $HADOOP_CONF_DIR ||  mkdir $HADOOP_CONF_DIR
@@ -139,20 +150,15 @@ function start_first_time {
   echo "Creating hdfs path /user/$USER"
   $HADOOP_HOME/bin/hadoop fs -mkdir -p "/user/$USER"
   
-  # create accumulo config
-  cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
-  # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
-  sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
- 
   # sleep 
-  sleep 3
+  sleep 5
 
   # init accumulo
   echo "Initializing accumulo"
   $ACCUMULO_HOME/bin/accumulo init --instance-name $cl_acc_inst_name --password $cl_acc_inst_pass
   
-  # sleep 3
-  sleep 3
+  # sleep
+  sleep 5
 
   # starting accumulo
   echo "starting accumulo..."
