@@ -29,12 +29,12 @@ fi
 # Stop: config
 
 # import port checking
-. "${bin}"/check_ports.sh
+. "${bin}"/ports.sh
 
 function download_packages() {
   # get stuff
   echo "Downloading packages from internet..."
-  mkdir ${CLOUD_HOME}/pkg # todo check to see if this exists
+  test -d ${CLOUD_HOME}/pkg || mkdir ${CLOUD_HOME}/pkg
   
   local mirror
   if [ -z ${pkg_src_mirror+x} ]; then
@@ -60,30 +60,49 @@ function download_packages() {
 }
 
 function unpackage {
+  local targs
+  if [[ -n "${cl_verbose}" && "${cl_verbose}" == "1" ]]; then
+    targs="xvf"
+  else
+    targs="xf"
+  fi
+
   echo "Unpackaging software..."
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}.tgz")
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz") && echo "Unpacked zookeeper"
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz") && echo "Unpacked accumulo"
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz") && echo "Unpacked hadoop"
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz") && echo "Unpacked kafka"
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}.tgz") && echo "Unpacked spark"
 }
 
 function configure {
   mkdir -p "${CLOUD_HOME}/tmp/staging"
   cp -r ${CLOUD_HOME}/templates/* ${CLOUD_HOME}/tmp/staging/
+
   ## Substitute env vars
   sed -i~orig "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#" ${CLOUD_HOME}/tmp/staging/*/*
-  
-  echo "Deploying config..."
+  sed -i~orig "s#CLOUD_LOCAL_HOSTNAME#${cl_hostname}#" ${CLOUD_HOME}/tmp/staging/*/*
+ 
+  # accumulo config
+  cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
+  # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
+  sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
+ 
+  # deploy from staging
+  echo "Deploying config from staging..."
   test -d $HADOOP_CONF_DIR ||  mkdir $HADOOP_CONF_DIR
   test -d $ZOOKEEPER_HOME/conf || mkdir $ZOOKEEPER_HOME/conf
   test -d $KAFKA_HOME/config || mkdir $KAFKA_HOME/config
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
+  cp ${CLOUD_HOME}/tmp/staging/accumulo/* $ACCUMULO_HOME/conf/
   cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
 
   # If Spark doesn't have log4j settings, use the Spark defaults
   test -f $SPARK_HOME/conf/log4j.properties || cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
+
+  # configure port offsets
+  configure_port_offset
 
   rm -rf ${CLOUD_HOME}/tmp/staging
 }

@@ -45,7 +45,7 @@ After installing it you should be able to reach your standard cloud urls:
 
 Options for using `cloud-local.sh` can be found by calling:
 
-    bin\cloud-local.sh help
+    bin/cloud-local.sh help
 
 ## Stopping and Starting
 
