@@ -13,22 +13,22 @@
 
     <property>
         <name>mapreduce.jobhistory.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:10020</value> <!-- CL_port_default 10020 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:10020</value> <!-- CL_port_default 10020 -->
     </property>
 
     <property>
         <name>mapreduce.jobhistory.webapp.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:19888</value> <!-- CL_port_default 19888 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:19888</value> <!-- CL_port_default 19888 -->
     </property>
 
     <property>
         <name>mapreduce.jobtracker.http.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:50030</value> <!-- CL_port_default 50030 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:50030</value> <!-- CL_port_default 50030 -->
     </property>
 
     <property>
         <name>mapreduce.tasktracker.http.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:50050</value> <!-- CL_port_default 50050 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:50050</value> <!-- CL_port_default 50050 -->
     </property>
 
 </configuration>

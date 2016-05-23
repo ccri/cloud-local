@@ -52,14 +52,19 @@ function set_env_vars {
 
   export KAFKA_HOME="${CLOUD_HOME}/kafka_2.11-${pkg_kafka_ver}"
   
+  test -d "${CLOUD_HOME}/tmp/pid" || mkdir "${CLOUD_HOME}/tmp/pid"
   export HADOOP_HOME="$CLOUD_HOME/hadoop-${pkg_hadoop_ver}"
   export HADOOP_PREFIX="${HADOOP_HOME}"
   export HADOOP_CONF_DIR="${HADOOP_PREFIX}/etc/hadoop"
   export HADOOP_COMMON_HOME="${HADOOP_HOME}"
   export HADOOP_HDFS_HOME="${HADOOP_HOME}"
   export HADOOP_YARN_HOME="${HADOOP_HOME}"
+  export HADOOP_PID_DIR="${CLOUD_HOME}/tmp/pid"
+  export HADOOP_IDENT_STRING=$(echo ${CLOUD_HOME} | md5sum)
 
   export YARN_HOME="${HADOOP_HOME}" 
+  export YARN_PID_DIR="${HADOOP_PID_DIR}"
+  export YARN_IDENT_STRING="${HADOOP_IDENT_STRING}"
 
   export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
 

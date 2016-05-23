@@ -4,8 +4,8 @@
 function get_port_offset {
   local offset=0
  
-  if [ -n "${cl_port_offset}" ]; then
-    offset=${cl_port_offset}
+  if [ -n "${CL_PORT_OFFSET}" ]; then
+    offset=${CL_PORT_OFFSET}
   fi
 
   echo ${offset}

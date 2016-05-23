@@ -31,42 +31,42 @@
 
     <property>
         <name>yarn.resourcemanager.webapp.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:8088</value> <!-- CL_port_default 8088 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:8088</value> <!-- CL_port_default 8088 -->
     </property>
 
     <property>
         <name>yarn.resourcemanager.scheduler.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:8030</value> <!-- CL_port_default 8030 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:8030</value> <!-- CL_port_default 8030 -->
     </property>
 
     <property>
         <name>yarn.resourcemanager.resource-tracker.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:8031</value> <!-- CL_port_default 8031 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:8031</value> <!-- CL_port_default 8031 -->
     </property>
 
     <property>
         <name>yarn.resourcemanager.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:8032</value> <!-- CL_port_default 8032 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:8032</value> <!-- CL_port_default 8032 -->
     </property>
 
     <property>
         <name>yarn.resourcemanager.admin.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:8033</value> <!-- CL_port_default 8033 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:8033</value> <!-- CL_port_default 8033 -->
     </property>
 
     <property>
         <name>yarn.resourcemanager.webapp.https.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:8090</value> <!-- CL_port_default 8090 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:8090</value> <!-- CL_port_default 8090 -->
     </property>
 
     <property>
         <name>yarn.nodemanager.localizer.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:8040</value> <!-- CL_port_default 8040 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:8040</value> <!-- CL_port_default 8040 -->
     </property>
 
     <property>
         <name>yarn.nodemanager.webapp.address</name>
-        <value>CLOUD_LOCAL_HOSTNAME:8042</value> <!-- CL_port_default 8042 -->
+        <value>CLOUD_LOCAL_BIND_ADDRESS:8042</value> <!-- CL_port_default 8042 -->
     </property>
 
 </configuration>

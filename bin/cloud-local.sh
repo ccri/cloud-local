@@ -83,8 +83,7 @@ function configure {
   cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
 
   ## Substitute env vars
-  sed -i~orig "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#" ${CLOUD_HOME}/tmp/staging/*/*
-  sed -i~orig "s#CLOUD_LOCAL_HOSTNAME#${CL_HOSTNAME}#" ${CLOUD_HOME}/tmp/staging/*/*
+  sed -i~orig "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#;s#CLOUD_LOCAL_HOSTNAME#${CL_HOSTNAME}#;s#CLOUD_LOCAL_BIND_ADDRESS#${CL_BIND_ADDRESS}#" ${CLOUD_HOME}/tmp/staging/*/*
  
   # accumulo config
   # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
@@ -237,6 +236,7 @@ function clear_data {
   rm -rf ${CLOUD_HOME}/data/dfs/data/*
   rm -rf ${CLOUD_HOME}/data/dfs/name/*
   rm -rf ${CLOUD_HOME}/data/hadoop/tmp/*
+  rm -rf ${CLOUD_HOME}/data/hadoop/pid/*
   if [ -d "${CLOUD_HOME}/data/kafka-logs" ]; then rm -rf ${CLOUD_HOME}/data/kafka-logs; fi # intentionally to clear dot files
 }
 
