@@ -47,6 +47,8 @@ Options for using `cloud-local.sh` can be found by calling:
 
     bin/cloud-local.sh help
 
+You can also set `CL_VERBOSE=1` env variable in `conf/cloud-local.conf` to increase messages
+
 ## Stopping and Starting
 
 You can safely stop the cloud using: 
@@ -61,6 +63,24 @@ You can start the cloud back up using the analogous `start` option. Be sure that
 
 If existing ports are bound to the ports needed for cloud-local an error message will be printed and the script will stop.
 
+## Changing Ports, Hostname, and Bind Address
+
+cloud-local allows you to modify the ports, hostname, and bind addresses in configuration or using variables in your env (bashrc). For example:
+
+    # sample .bashrc configuration
+    
+    # offset all ports by 10000
+    export CL_PORT_OFFSET=10000
+    
+    # change the bind address
+    export CL_BIND_ADDRESS=192.168.2.2
+    
+    # change the hostname from localhost to something else
+    export CL_HOSTNAME=mydns.mycompany.com
+    
+Port offseting moves the entire port space by a given numerical amount in order to allow multiple cloud-local instances to run on a single machine (usually by different users). The bind address and hostname args allow you to reference cloud local from other machines.
+
+WARNING - you should stop and clean cloud-local before changing any of these parameters since they will modify the config and may prevent cloud-local from cleanly shutting down. Changing port offsets is supported by XML comments in the accumulo and hadoop config files. Removing or changing these comments (CL_port_default) will likely cause failures.
 
 ## Maintenance
 

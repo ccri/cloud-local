@@ -59,7 +59,7 @@ function set_env_vars {
   export HADOOP_COMMON_HOME="${HADOOP_HOME}"
   export HADOOP_HDFS_HOME="${HADOOP_HOME}"
   export HADOOP_YARN_HOME="${HADOOP_HOME}"
-  export HADOOP_PID_DIR="${CLOUD_HOME}/tmp/pid"
+  export HADOOP_PID_DIR="${CLOUD_HOME}/data/pid"
   export HADOOP_IDENT_STRING=$(echo ${CLOUD_HOME} | md5sum)
 
   export YARN_HOME="${HADOOP_HOME}" 
