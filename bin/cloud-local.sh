@@ -15,6 +15,13 @@ script=$( basename "${SOURCE}" )
 # Start: config
 . "${bin}"/config.sh
 
+# Check config
+if ! validate_config; then
+  echo "Invalid configuration"
+  exit 1
+fi
+
+# check java home
 if [[ -z "$JAVA_HOME" ]];then
   echo "must set JAVA_HOME..."
   exit 1
@@ -28,18 +35,27 @@ function download_packages() {
   # get stuff
   echo "Downloading packages from internet..."
   mkdir ${CLOUD_HOME}/pkg # todo check to see if this exists
-  local mirror=${pkg_src_mirror}
+  
+  local mirror
+  if [ -z ${pkg_src_mirror+x} ]; then
+    local mirror=$(curl 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g' | head -1)
+  else
+    local mirror=${pkg_src_mirror}
+  fi
+  echo "Using mirror ${mirror}"
+
   local maven=${pkg_src_maven}
 
   declare -a urls=("${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
                    "${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
                    "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
-                   "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
+                   "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz"
+                   "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}.tgz")
   
   for x in "${urls[@]}"; do
       fname=$(basename "$x");
       echo "fetching ${x}";
-      wget -O "${CLOUD_HOME}/pkg/${fname}" "$x";
+      wget -c -O "${CLOUD_HOME}/pkg/${fname}" "$x";
   done 
 }
 
@@ -49,6 +65,7 @@ function unpackage {
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
+  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}.tgz")
 }
 
 function configure {
@@ -64,6 +81,9 @@ function configure {
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
   cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
+
+  # If Spark doesn't have log4j settings, use the Spark defaults
+  test -f $SPARK_HOME/conf/log4j.properties || cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
 
   rm -rf ${CLOUD_HOME}/tmp/staging
 }
@@ -141,8 +161,7 @@ function start_cloud {
   hadoop-daemon.sh --config $HADOOP_CONF_DIR start namenode
   hadoop-daemon.sh --config $HADOOP_CONF_DIR start secondarynamenode
   hadoop-daemon.sh --config $HADOOP_CONF_DIR start datanode
-  yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
-  yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+  start_yarn
   
   # Wait for HDFS to exit safemode:
   echo "Waiting for HDFS to exit safemode..."
@@ -151,6 +170,11 @@ function start_cloud {
   # starting accumulo
   echo "starting accumulo..."
   $ACCUMULO_HOME/bin/start-all.sh
+}
+
+function start_yarn {
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
 }
 
 function stop_cloud {
@@ -162,8 +186,7 @@ function stop_cloud {
   $ACCUMULO_HOME/bin/stop-all.sh
   
   echo "Stopping yarn and dfs..."
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop resourcemanager
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop nodemanager
+  stop_yarn
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop namenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop secondarynamenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop datanode
@@ -172,11 +195,17 @@ function stop_cloud {
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 }
 
+function stop_yarn {
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop resourcemanager
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop nodemanager
+}
+
 function clear_sw {
   rm -rf "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}"
   rm -rf "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}"
   rm -rf "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
   rm -rf "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
+  rm -rf "${CLOUD_HOME}/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}"
   rm -rf "${CLOUD_HOME}/tmp"
   if [ -a "${CLOUD_HOME}/zookeeper.out" ]; then rm "${CLOUD_HOME}/zookeeper.out"; fi #hahahaha
 }
@@ -192,7 +221,7 @@ function clear_data {
 }
 
 function show_help {
-  echo "Provide 1 command: (init|start|stop|reconfigure|clean|help)"
+  echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|clean|help)"
 }
 
 if [ "$#" -ne 1 ]; then
@@ -218,6 +247,11 @@ elif [[ $1 == 'stop' ]]; then
   echo "Stopping Cloud..."
   stop_cloud
   echo "Cloud stopped"
+elif [[ $1 == 'reyarn' ]]; then
+  echo "Stopping Yarn..."
+  stop_yarn
+  echo "Starting Yarn..."
+  start_yarn
 else
   show_help
 fi
