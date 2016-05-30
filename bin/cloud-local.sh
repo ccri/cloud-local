@@ -50,8 +50,8 @@ function download_packages() {
                    "${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
                    "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
                    "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz"
-                   "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}.tgz")
-  
+                   "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-without-hadoop.tgz")
+
   for x in "${urls[@]}"; do
       fname=$(basename "$x");
       echo "fetching ${x}";
@@ -65,7 +65,7 @@ function unpackage {
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
   (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}.tgz")
+  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-without-hadoop.tgz")
 }
 
 function configure {
@@ -89,6 +89,8 @@ function configure {
 }
 
 function start_first_time {
+  # This seems redundant to config but this is the first time in normal sequence where it will set properly
+  export SPARK_DIST_CLASSPATH=$(hadoop classpath)
   # check ports
   check_ports
 
@@ -200,7 +202,7 @@ function clear_sw {
   rm -rf "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}"
   rm -rf "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
   rm -rf "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
-  rm -rf "${CLOUD_HOME}/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}"
+  rm -rf "${CLOUD_HOME}/spark-${pkg_spark_ver}-bin-without-hadoop"
   rm -rf "${CLOUD_HOME}/tmp"
   if [ -a "${CLOUD_HOME}/zookeeper.out" ]; then rm "${CLOUD_HOME}/zookeeper.out"; fi #hahahaha
 }

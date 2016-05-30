@@ -7,3 +7,5 @@ data/*
 /zookeeper*
 /kafka*
 /spark*
+/.idea
+/cloud-local.iml
