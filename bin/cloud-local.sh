@@ -124,6 +124,12 @@ function start_first_time {
   
   # create accumulo config
   cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
+  # if we have a dns entry, change masters and slaves from localhost
+  ipaddress="$(ifconfig $(route | grep default | awk '{print $NF}') | grep -o 'inet addr:\S*' | awk -F ':' '{print $NF}')"
+  for CONFIG_FILE in masters slaves gc tracers monitor
+  do
+    sed -i "s/^localhost/${ipaddress}/" "${ACCUMULO_HOME}/conf/${CONFIG_FILE}"
+  done
   # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
   sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
  
