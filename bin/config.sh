@@ -63,9 +63,12 @@ function set_env_vars {
 
   export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
 
-  export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-hadoop${pkg_spark_hadoop_ver}"
+  export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-without-hadoop"
   
   export PATH=$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
+
+  # This variable requires Hadoop executable, which will fail during certain runs/steps
+  export SPARK_DIST_CLASSPATH=$(hadoop classpath 2>/dev/null)
 }
 
 if [[ -z "$JAVA_HOME" ]];then
