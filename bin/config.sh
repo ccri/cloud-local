@@ -58,8 +58,12 @@ function set_env_vars {
   export HADOOP_COMMON_HOME="${HADOOP_HOME}"
   export HADOOP_HDFS_HOME="${HADOOP_HOME}"
   export HADOOP_YARN_HOME="${HADOOP_HOME}"
+  export HADOOP_PID_DIR="${CLOUD_HOME}/data/hadoop/pid"
+  export HADOOP_IDENT_STRING=$(echo ${CLOUD_HOME} | md5sum)
 
   export YARN_HOME="${HADOOP_HOME}" 
+  export YARN_PID_DIR="${HADOOP_PID_DIR}"
+  export YARN_IDENT_STRING="${HADOOP_IDENT_STRING}"
 
   export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
 
