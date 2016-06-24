@@ -60,7 +60,7 @@ function check_ports {
   # spark
   check_port 4040 # Spark job monitor
 
-  echo "Known ports are OK (using offset ${offset})"
+  echo "Known ports are OK (using offset $(get_port_offset))"
 }
 
 function configure_port_offset {
