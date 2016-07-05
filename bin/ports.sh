@@ -74,6 +74,11 @@ function configure_port_offset {
   zkPort=$((2181+offset))
   sed -i "s/clientPort=.*/clientPort=$zkPort/" $ZOOKEEPER_HOME/conf/zoo.cfg
 
+  # kafka (server.properties)
+  kafkaPort=$((9092+offset))
+  sed -i "s/\/\/$CL_HOSTNAME:[0-9].*/\/\/$CL_HOSTNAME:$kafkaPort/" $KAFKA_HOME/config/server.properties
+  sed -i "s/zookeeper.connect=$CL_HOSTNAME:[0-9].*/zookeeper.connect=$CL_HOSTNAME:$zkPort/" $KAFKA_HOME/config/server.properties
+
   # hadoop and accumulo xml files
   # The idea with this block is that the xml files have comments which tag lines which need
   # a port replacement, and the comments provide the default values. So to change ports,
