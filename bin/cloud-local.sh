@@ -22,19 +22,19 @@ if ! validate_config; then
 fi
 
 # check java home
-if [[ -z "$JAVA_HOME" ]];then
+if [[ -z "$JAVA_HOME" ]]; then
   echo "must set JAVA_HOME..."
   exit 1
 fi
 # Stop: config
 
 # import port checking
-. "${bin}"/check_ports.sh
+. "${bin}"/ports.sh
 
 function download_packages() {
   # get stuff
   echo "Downloading packages from internet..."
-  mkdir ${CLOUD_HOME}/pkg # todo check to see if this exists
+  test -d ${CLOUD_HOME}/pkg || mkdir ${CLOUD_HOME}/pkg
   
   local mirror
   if [ -z ${pkg_src_mirror+x} ]; then
@@ -60,30 +60,59 @@ function download_packages() {
 }
 
 function unpackage {
+  local targs
+  if [[ "${CL_VERBOSE}" == "1" ]]; then
+    targs="xvf"
+  else
+    targs="xf"
+  fi
+
   echo "Unpackaging software..."
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
-  (cd -P "${CLOUD_HOME}" && tar xvf "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-without-hadoop.tgz")
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz") && echo "Unpacked zookeeper"
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz") && echo "Unpacked accumulo"
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz") && echo "Unpacked hadoop"
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz") && echo "Unpacked kafka"
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-without-hadoop.tgz") && echo "Unpacked spark"
 }
 
 function configure {
   mkdir -p "${CLOUD_HOME}/tmp/staging"
   cp -r ${CLOUD_HOME}/templates/* ${CLOUD_HOME}/tmp/staging/
+
+  # accumulo config before substitutions
+  cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
+
   ## Substitute env vars
-  sed -i~orig "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#" ${CLOUD_HOME}/tmp/staging/*/*
-  
-  echo "Deploying config..."
+  sed -i~orig "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#;s#CLOUD_LOCAL_HOSTNAME#${CL_HOSTNAME}#;s#CLOUD_LOCAL_BIND_ADDRESS#${CL_BIND_ADDRESS}#" ${CLOUD_HOME}/tmp/staging/*/*
+ 
+  # accumulo config
+  # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
+  sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
+  echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/gc
+  echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/masters
+  echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/slaves
+  echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/monitor
+  echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/tracers
+
+  # hadoop slaves file
+  echo "${CL_HOSTNAME}" > ${CLOUD_HOME}/tmp/staging/hadoop/slaves
+
+
+  # deploy from staging
+  echo "Deploying config from staging..."
   test -d $HADOOP_CONF_DIR ||  mkdir $HADOOP_CONF_DIR
   test -d $ZOOKEEPER_HOME/conf || mkdir $ZOOKEEPER_HOME/conf
   test -d $KAFKA_HOME/config || mkdir $KAFKA_HOME/config
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
+  cp ${CLOUD_HOME}/tmp/staging/accumulo/* $ACCUMULO_HOME/conf/
   cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
 
   # If Spark doesn't have log4j settings, use the Spark defaults
   test -f $SPARK_HOME/conf/log4j.properties || cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
+
+  # configure port offsets
+  configure_port_offset
 
   rm -rf ${CLOUD_HOME}/tmp/staging
 }
@@ -122,20 +151,15 @@ function start_first_time {
   echo "Creating hdfs path /user/$USER"
   $HADOOP_HOME/bin/hadoop fs -mkdir -p "/user/$USER"
   
-  # create accumulo config
-  cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
-  # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
-  sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
- 
   # sleep 
-  sleep 3
+  sleep 5
 
   # init accumulo
   echo "Initializing accumulo"
   $ACCUMULO_HOME/bin/accumulo init --instance-name $cl_acc_inst_name --password $cl_acc_inst_pass
   
-  # sleep 3
-  sleep 3
+  # sleep
+  sleep 5
 
   # starting accumulo
   echo "starting accumulo..."
@@ -214,6 +238,7 @@ function clear_data {
   rm -rf ${CLOUD_HOME}/data/dfs/data/*
   rm -rf ${CLOUD_HOME}/data/dfs/name/*
   rm -rf ${CLOUD_HOME}/data/hadoop/tmp/*
+  rm -rf ${CLOUD_HOME}/data/hadoop/pid/*
   if [ -d "${CLOUD_HOME}/data/kafka-logs" ]; then rm -rf ${CLOUD_HOME}/data/kafka-logs; fi # intentionally to clear dot files
 }
 
