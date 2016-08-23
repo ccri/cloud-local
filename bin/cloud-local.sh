@@ -132,8 +132,8 @@ function start_first_time {
   $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
   
   # format namenode
-  echo "Formatting namenode..."
-  $HADOOP_HOME/bin/hadoop namenode -format
+  echo "Formatting namenode with config dir ${HADOOP_CONF_DIR}..."
+  $HADOOP_HOME/bin/hadoop --config $HADOOP_CONF_DIR namenode -format
   
   # start hadoop
   echo "Starting hadoop..."
