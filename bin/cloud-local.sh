@@ -169,14 +169,25 @@ function start_first_time {
 function start_cloud {
   # Check ports
   check_ports
-  
+  start_zk
+  start_kafka
+  start_hadoop
+  start_accumulo
+}
+
+function start_zk {
   # start zk
   echo "Starting zoo..."
   (cd $CLOUD_HOME ; zkServer.sh start)
+}
 
+function start_kafka {
+  # start kafka
   echo "Starting kafka..."
   $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
-  
+}
+
+function start_hadoop {
   # start hadoop
   echo "Starting hadoop..."
   hadoop-daemon.sh --config $HADOOP_CONF_DIR start namenode
@@ -187,8 +198,10 @@ function start_cloud {
   # Wait for HDFS to exit safemode:
   echo "Waiting for HDFS to exit safemode..."
   hdfs dfsadmin -safemode wait
-  
-  # starting accumulo
+}
+
+function start_accumulo {
+  # start accumulo
   echo "starting accumulo..."
   $ACCUMULO_HOME/bin/start-all.sh
 }
@@ -199,19 +212,31 @@ function start_yarn {
 }
 
 function stop_cloud {
+  stop_kafka
+  stop_accumulo
+  stop_hadoop
+  stop_zk
+}
 
+function stop_kafka {
   echo "Stopping kafka..."
   $KAFKA_HOME/bin/kafka-server-stop.sh
+}
 
+function stop_accumulo {
   echo "Stopping accumulo..."
   $ACCUMULO_HOME/bin/stop-all.sh
-  
+}
+
+function stop_hadoop {
   echo "Stopping yarn and dfs..."
   stop_yarn
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop namenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop secondarynamenode
   $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop datanode
- 
+}
+
+function stop_zk {
   echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 }
@@ -246,7 +271,7 @@ function show_help {
   echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|clean|help)"
 }
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -eq 0 ]; then
   show_help
   exit 1
 fi
@@ -265,6 +290,24 @@ elif [[ $1 == 'start' ]]; then
   echo "Starting cloud..."
   start_cloud
   echo "Cloud Started"
+elif [[ $1 == 'accumulo' ]]; then
+  if [[ $2 == 'start' ]]; then
+	start_accumulo
+  elif [[ $2 == 'stop' ]]; then
+	stop_accumulo
+  fi
+elif [[ $1 == 'hadoop' ]]; then
+  if [[ $2 == 'start' ]]; then
+	start_hadoop
+  elif [[ $2 == 'stop' ]]; then
+	stop_hadoop
+  fi
+elif [[ $1 == 'kafka' ]]; then
+  if [[ $2 == 'start' ]]; then
+	start_kafka
+  elif [[ $2 == 'stop' ]]; then
+	stop_kafka
+  fi
 elif [[ $1 == 'stop' ]]; then
   echo "Stopping Cloud..."
   stop_cloud
