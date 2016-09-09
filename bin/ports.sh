@@ -84,7 +84,10 @@ function configure_port_offset {
   # a port replacement, and the comments provide the default values. So to change ports,
   # we replace all the instance of the default value, on the line with the comment, with
   # the desired (offset) port.
+
+  # TODO fix this to check for hbase/accumulo enabled
   for FILE in $ACCUMULO_HOME/conf/accumulo-site.xml \
+              $HBASE_HOME/conf/hbase-site.xml \
               $HADOOP_CONF_DIR/core-site.xml \
               $HADOOP_CONF_DIR/hdfs-site.xml \
               $HADOOP_CONF_DIR/mapred-site.xml \

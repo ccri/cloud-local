@@ -65,11 +65,14 @@ function set_env_vars {
   export YARN_PID_DIR="${HADOOP_PID_DIR}"
   export YARN_IDENT_STRING="${HADOOP_IDENT_STRING}"
 
-  export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
-
   export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-without-hadoop"
+
+  [[ $acc_enable -eq 1 ]] && export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
+  [[ $hbase_enable -eq 1 ]] && export HBASE_HOME="${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
   
-  export PATH=$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$ACCUMULO_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
+  export PATH=$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
+  [[ $acc_enable -eq 1 ]] && export PATH="${ACCUMULO_HOME}/bin:${PATH}"
+  [[ $hbase_enable -eq 1 ]] && export PATH="${HBASE_HOME}/bin:${PATH}"
 
   # This variable requires Hadoop executable, which will fail during certain runs/steps
   export SPARK_DIST_CLASSPATH=$(hadoop classpath 2>/dev/null)
