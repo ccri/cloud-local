@@ -2,9 +2,17 @@
 
 Cloud-local is a collection of bash scripts to set up a single-node cloud on on your desktop, laptop, or NUC. Performance expectations are to be sufficient for testing things like map-reduce ingest, converters in real life with real files, and your own geoserver/iterator stack. This setup is preconfigured to run YARN so you can submit command line tools mapreduce jobs to it. Currently localhost ssh is NOT required so it will work on a NUC. 
 
+Cloud Local can be used to run single node versions of the following software:
+* Hadoop HDFS
+* YARN
+* Accumulo
+* HBase
+* Spark (on yarn)
+* Kafka
+
 ## Getting Started 
 
-To prepare for the first run of cloud-local, you may need to `unset` environment variables `HADOOP_HOME`, `ACCUMULO_HOME` , `ZOOKEEPER_HOME`, and others. If `env |grep -i hadoop` comes back empty, you should be good to go. You should also `kill` any instances of zookeeper or hadoop running locally. Find them with `jps -lV`.
+To prepare for the first run of cloud-local, you may need to `unset` environment variables `HADOOP_HOME`, `ACCUMULO_HOME`, `ZOOKEEPER_HOME`, `HBASE_HOME`, and others. If `env |grep -i hadoop` comes back empty, you should be good to go. You should also `kill` any instances of zookeeper or hadoop running locally. Find them with `jps -lV`.
 
 When using this the first time...
 
@@ -12,14 +20,16 @@ When using this the first time...
     cd cloud-local
     bin/cloud-local.sh init
 
+Accumulo is the default bigtable instance...edit `conf/cloud-local.conf` to disable accumulo and enable hbase
+
 Cloud local sets a default accumulo instance name of "local" and password of "secret" which can be modified by editing the `conf/cloud-local.conf` file. If you want to change this you'll need to stop, clean, and reconfigure.
 
 This init script does several things:
 * configure HDFS configuration files
 * format the HDFS namenode
 * create a user homedir in hdfs
-* initialize accumulo
-* start up zookeeper, hadoop, and accumulo
+* initialize accumulo/hbase
+* start up zookeeper, hadoop, and accumulo/hbase
 * start kafka broker
 
 After running `init` source the variables in your bashrc or other shell:
