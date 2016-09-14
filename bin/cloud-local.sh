@@ -52,11 +52,11 @@ function download_packages() {
                    "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-without-hadoop.tgz")
 
   if [[ "$acc_enable" -eq 1 ]]; then
-    urls=("${urls[@]}", "${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
+    urls=("${urls[@]}" "${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
   fi
 
   if [[ "$hbase_enable" -eq 1 ]]; then
-    urls=("${urls[@]}", "${mirror}/hbase/${pkg_hbase_ver}/hbase-${pkg_hbase_ver}-bin.tar.gz")
+    urls=("${urls[@]}" "${mirror}/hbase/${pkg_hbase_ver}/hbase-${pkg_hbase_ver}-bin.tar.gz")
   fi
 
   for x in "${urls[@]}"; do
