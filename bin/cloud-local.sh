@@ -31,8 +31,10 @@ function download_packages() {
   local archive=${pkg_src_archive}
   local mirror=${pkg_src_mirror}
   local maven=${pkg_src_maven}
+  local ccri=${pkg_src_ccri}
 
   declare -a urls=("${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz"
+                   "${ccri}/org/locationtech/geomesa/geomesa-distributed-runtime/${pkg_geomesadist_ver}/geomesa-distributed-runtime-${pkg_geomesadist_ver}.jar"
                    "${archive}/dist/hadoop/core/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
                    "${archive}/dist/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
                    "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
@@ -65,6 +67,7 @@ function configure {
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
   cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
+  cp ${CLOUD_HOME}/pkg/geomesa-distributed-runtime-${pkg_geomesadist_ver}.jar ${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}/lib/ext/
 
   rm -rf ${CLOUD_HOME}/tmp/staging
 }
