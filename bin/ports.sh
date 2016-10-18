@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+case $(uname) in
+  "Darwin") SED_REGEXP_EXTENDED='-E' ;;
+  *) SED_REGEXP_EXTENDED='-r' ;;
+esac
+
 # get the port offset from config variable
 function get_port_offset {
   local offset=0
@@ -72,12 +77,12 @@ function configure_port_offset {
   # zookeeper (zoo.cfg)
   # do this one by hand, it's fairly straightforward
   zkPort=$((2181+offset))
-  sed -i "s/clientPort=.*/clientPort=$zkPort/" $ZOOKEEPER_HOME/conf/zoo.cfg
+  sed -i~orig "s/clientPort=.*/clientPort=$zkPort/" $ZOOKEEPER_HOME/conf/zoo.cfg
 
   # kafka (server.properties)
   kafkaPort=$((9092+offset))
-  sed -i "s/\/\/$CL_HOSTNAME:[0-9].*/\/\/$CL_HOSTNAME:$kafkaPort/" $KAFKA_HOME/config/server.properties
-  sed -i "s/zookeeper.connect=$CL_HOSTNAME:[0-9].*/zookeeper.connect=$CL_HOSTNAME:$zkPort/" $KAFKA_HOME/config/server.properties
+  sed -i~orig "s/\/\/$CL_HOSTNAME:[0-9].*/\/\/$CL_HOSTNAME:$kafkaPort/" $KAFKA_HOME/config/server.properties
+  sed -i~orig "s/zookeeper.connect=$CL_HOSTNAME:[0-9].*/zookeeper.connect=$CL_HOSTNAME:$zkPort/" $KAFKA_HOME/config/server.properties
 
   # hadoop and accumulo xml files
   # The idea with this block is that the xml files have comments which tag lines which need
@@ -99,12 +104,12 @@ function configure_port_offset {
         newPort=$(($basePort+$offset))
         # the assumption here is that all port values are right before the '</value>' tag
         # the following sed only makes the replacement on a single line, containing the matched comment
-        sed -i -r "/$KEY $basePort/ s#[0-9]+</value>#$newPort</value>#" $FILE
+        sed -i~orig ${SED_REGEXP_EXTENDED} "/$KEY $basePort/ s#[0-9]+</value>#$newPort</value>#" $FILE
         # mark this line done
-        sed -i -r "s/$KEY $basePort/$KEY_CHANGED $basePort/" $FILE
+        sed -i~orig ${SED_REGEXP_EXTENDED} "s/$KEY $basePort/$KEY_CHANGED $basePort/" $FILE
     done
     # re-mark all comment lines, so we can change ports again later if we want
-    sed -i "s/$KEY_CHANGED/$KEY/g" $FILE
+    sed -i~orig "s/$KEY_CHANGED/$KEY/g" $FILE
   done
 
   echo "Ports configured to use offset $offset"
