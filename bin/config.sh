@@ -37,6 +37,8 @@ function validate_config {
     pkg_error="Invalid accumulo version: '${pkg_accumulo_ver}'"
   elif [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ 0[.]9[.].+ ]]; then
     pkg_error="Invalid kafka version: '${pkg_kafka_ver}'"
+  elif [[ -z "$pkg_geomesa_scala_ver" && $pkg_geomesa_ver =~ 1[.]3[.].+ ]]; then
+    pkg_error="Invalid GeoMesa Scala version: '${pkg_geomesa_scala_ver}'"
   fi
   
   if [[ ! -z "$pkg_error" ]]; then
@@ -48,6 +50,9 @@ function validate_config {
 }
 
 function set_env_vars {
+  unset GEOMESA_HOME
+  [[ -z "$geomesa_pkg_ver" ]] || export GEOMESA_HOME="${CLOUD_HOME}/geomesa_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"
+
   export ZOOKEEPER_HOME="${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
 
   export KAFKA_HOME="${CLOUD_HOME}/kafka_2.11-${pkg_kafka_ver}"
@@ -70,7 +75,7 @@ function set_env_vars {
   [[ $acc_enable -eq 1 ]] && export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
   [[ $hbase_enable -eq 1 ]] && export HBASE_HOME="${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
   
-  export PATH=$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
+  export PATH=$GEOMESA_HOME/bin:$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
   [[ $acc_enable -eq 1 ]] && export PATH="${ACCUMULO_HOME}/bin:${PATH}"
   [[ $hbase_enable -eq 1 ]] && export PATH="${HBASE_HOME}/bin:${PATH}"
 

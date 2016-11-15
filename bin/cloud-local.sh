@@ -36,6 +36,12 @@ function download_packages() {
   echo "Downloading packages from internet..."
   test -d ${CLOUD_HOME}/pkg || mkdir ${CLOUD_HOME}/pkg
   
+  # GeoMesa
+  gm="geomesa-accumulo-dist_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}-bin.tar.gz"
+  wget -c -O "${CLOUD_HOME}/pkg/${gm}" "http://art.ccri.com:8081/artifactory/libs-release-local/org/locationtech/geomesa/geomesa-accumulo-dist_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
+  gm="geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar"
+  wget -c -O "${CLOUD_HOME}/pkg/${gm}" "http://art.ccri.com:8081/artifactory/libs-release-local/org/locationtech/geomesa/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
+
   local mirror
   if [ -z ${pkg_src_mirror+x} ]; then
     local mirror=$(curl 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g' | head -1)
@@ -75,6 +81,7 @@ function unpackage {
   fi
 
   echo "Unpackaging software..."
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/geomesa-accumulo-dist_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}-bin.tar.gz") && echo "Unpacked GeoMesa Tools"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz") && echo "Unpacked zookeeper"
   [[ "$acc_enable" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz") && echo "Unpacked accumulo"
   [[ "$hbase_enable" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hbase-${pkg_hbase_ver}-bin.tar.gz") && echo "Unpacked hbase"
@@ -112,7 +119,6 @@ function configure {
   # hadoop slaves file
   echo "${CL_HOSTNAME}" > ${CLOUD_HOME}/tmp/staging/hadoop/slaves
 
-
   # deploy from staging
   echo "Deploying config from staging..."
   test -d $HADOOP_CONF_DIR ||  mkdir $HADOOP_CONF_DIR
@@ -122,6 +128,7 @@ function configure {
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
   cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
   [[ "$acc_enable" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/accumulo/* ${ACCUMULO_HOME}/conf/
+  [[ "$acc_enable" -eq 1 ]] && cp ${CLOUD_HOME}/pkg/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar ${ACCUMULO_HOME}/lib/ext/
   [[ "$hbase_enable" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/hbase/* ${HBASE_HOME}/conf/
 
   # If Spark doesn't have log4j settings, use the Spark defaults
@@ -263,6 +270,7 @@ function stop_yarn {
 function clear_sw {
   [[ "$acc_enable" -eq 1 ]] && rm -rf "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}"
   [[ "$hbase_enable" -eq 1 ]] && rm -rf "${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
+  [[ -d "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"  ]] && rm -rf "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"
   rm -rf "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}"
   rm -rf "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
   rm -rf "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
