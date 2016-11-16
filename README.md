@@ -9,6 +9,7 @@ Cloud Local can be used to run single node versions of the following software:
 * HBase
 * Spark (on yarn)
 * Kafka
+* GeoMesa
 
 ## Getting Started 
 
@@ -31,6 +32,8 @@ This init script does several things:
 * initialize accumulo/hbase
 * start up zookeeper, hadoop, and accumulo/hbase
 * start kafka broker
+* install GeoMesa Accumulo iterators
+* install GeoMesa command-line tools
 
 After running `init` source the variables in your bashrc or other shell:
 
