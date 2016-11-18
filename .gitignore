@@ -8,6 +8,7 @@ data/*
 /kafka*
 /spark*
 /geomesa*
+/scala*
 /.idea
 /cloud-local.iml
 *.iml

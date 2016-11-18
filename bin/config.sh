@@ -50,9 +50,9 @@ function validate_config {
 }
 
 function set_env_vars {
-  unset GEOMESA_HOME
-  unset GEOMESA_BIN
-  if [[ ! -z "$pkg_geomesa_ver" ]]; then
+  if [[ $geomesa_enabled -eq "1" ]]; then
+    unset GEOMESA_HOME
+    unset GEOMESA_BIN
     export GEOMESA_HOME="${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"
     export GEOMESA_BIN="${GEOMESA_HOME}/bin:"
     echo "Setting GEOMESA_HOME:  ${GEOMESA_HOME}"
@@ -77,12 +77,12 @@ function set_env_vars {
 
   export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-without-hadoop"
 
-  [[ $acc_enable -eq 1 ]] && export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
-  [[ $hbase_enable -eq 1 ]] && export HBASE_HOME="${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
+  [[ "${acc_enabled}" -eq "1" ]] && export ACCUMULO_HOME="${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}"
+  [[ "${hbase_enabled}" -eq "1" ]] && export HBASE_HOME="${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
   
   export PATH="$GEOMESA_BIN"$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
-  [[ $acc_enable -eq 1 ]] && export PATH="${ACCUMULO_HOME}/bin:${PATH}"
-  [[ $hbase_enable -eq 1 ]] && export PATH="${HBASE_HOME}/bin:${PATH}"
+  [[ "${acc_enabled}" -eq "1" ]] && export PATH="${ACCUMULO_HOME}/bin:${PATH}"
+  [[ "${hbase_enabled}" -eq "1" ]] && export PATH="${HBASE_HOME}/bin:${PATH}"
 
   # This variable requires Hadoop executable, which will fail during certain runs/steps
   export SPARK_DIST_CLASSPATH=$(hadoop classpath 2>/dev/null)

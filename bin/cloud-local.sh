@@ -40,12 +40,20 @@ function download_packages() {
   if [[ "${geomesa_enabled}" -eq "1" ]]; then
     gm="geomesa-accumulo-dist_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}-bin.tar.gz"
     url="http://art.ccri.com:8081/artifactory/libs-release-local/org/locationtech/geomesa/geomesa-accumulo-dist_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
-    wget -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
+    wget -c -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
       || { rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"; };
     gm="geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar"
     url="http://art.ccri.com:8081/artifactory/libs-release-local/org/locationtech/geomesa/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
-    wget -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
+    wget -c -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
       || { rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"; };
+  fi
+
+  # Scala
+  if [[ "${scala_enabled}" -eq "1" ]]; then
+    url="http://downloads.lightbend.com/scala/${pkg_scala_ver}/scala-${pkg_scala_ver}.tgz"
+    file="${CLOUD_HOME}/pkg/scala-${pkg_scala_ver}.tgz"
+    wget -c -O "${file}" "${url}" \
+      || { rm -f "${file}"; echo "Error downloading: ${file}"; errorList="${errorList} scala-${pkg_scala_ver}.tgz ${NL}"; };
   fi
 
   local mirror
@@ -63,18 +71,18 @@ function download_packages() {
                    "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz"
                    "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-without-hadoop.tgz")
 
-  if [[ "$acc_enable" -eq 1 ]]; then
+  if [[ "$acc_enabled" -eq 1 ]]; then
     urls=("${urls[@]}" "${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
   fi
 
-  if [[ "$hbase_enable" -eq 1 ]]; then
+  if [[ "$hbase_enabled" -eq 1 ]]; then
     urls=("${urls[@]}" "${mirror}/hbase/${pkg_hbase_ver}/hbase-${pkg_hbase_ver}-bin.tar.gz")
   fi
 
   for x in "${urls[@]}"; do
       fname=$(basename "$x");
       echo "fetching ${x}";
-      wget -O "${CLOUD_HOME}/pkg/${fname}" "$x" || { rm -f "${CLOUD_HOME}/pkg/${fname}"; echo "Error Downloading: ${fname}"; errorList="${errorList} ${x} ${NL}"; };
+      wget -c -O "${CLOUD_HOME}/pkg/${fname}" "$x" || { rm -f "${CLOUD_HOME}/pkg/${fname}"; echo "Error Downloading: ${fname}"; errorList="${errorList} ${x} ${NL}"; };
   done 
 
   if [[ -n "${errorList}" ]]; then
@@ -94,9 +102,12 @@ function unpackage {
   [[ "${geomesa_enabled}" -eq "1" ]] \
     && $(cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/geomesa-accumulo-dist_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}-bin.tar.gz") \
     && echo "Unpacked GeoMesa Tools"
+  [[ "${scala_enabled}" -eq "1" ]] \
+    && $(cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/scala-${pkg_scala_ver}.tgz") \
+    && echo "Unpacked Scala ${pkg_scala_ver}"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz") && echo "Unpacked zookeeper"
-  [[ "$acc_enable" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz") && echo "Unpacked accumulo"
-  [[ "$hbase_enable" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hbase-${pkg_hbase_ver}-bin.tar.gz") && echo "Unpacked hbase"
+  [[ "$acc_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz") && echo "Unpacked accumulo"
+  [[ "$hbase_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hbase-${pkg_hbase_ver}-bin.tar.gz") && echo "Unpacked hbase"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz") && echo "Unpacked hadoop"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz") && echo "Unpacked kafka"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-without-hadoop.tgz") && echo "Unpacked spark"
@@ -107,12 +118,12 @@ function configure {
   cp -r ${CLOUD_HOME}/templates/* ${CLOUD_HOME}/tmp/staging/
 
   # accumulo config before substitutions
-  [[ "$acc_enable" -eq 1 ]] && cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
+  [[ "$acc_enabled" -eq 1 ]] && cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
 
   ## Substitute env vars
   sed -i~orig "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#;s#CLOUD_LOCAL_HOSTNAME#${CL_HOSTNAME}#;s#CLOUD_LOCAL_BIND_ADDRESS#${CL_BIND_ADDRESS}#" ${CLOUD_HOME}/tmp/staging/*/*
 
-  if [[ "$acc_enable" -eq 1 ]]; then
+  if [[ "$acc_enabled" -eq 1 ]]; then
     # accumulo config
     # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
     sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
@@ -123,7 +134,7 @@ function configure {
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/tracers
   fi
 
-  if [[ "$hbase_enable" -eq 1 ]]; then
+  if [[ "$hbase_enabled" -eq 1 ]]; then
     sed -i~orig "s/\# export HBASE_MANAGES_ZK=true/export HBASE_MANAGES_ZK=false/" "${HBASE_HOME}/conf/hbase-env.sh"
     echo "${CL_HOSTNAME}" > ${HBASE_HOME}/conf/regionservers
   fi
@@ -139,9 +150,9 @@ function configure {
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
   cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
-  [[ "$acc_enable" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/accumulo/* ${ACCUMULO_HOME}/conf/
-  [[ "$acc_enable" -eq 1 ]] && cp ${CLOUD_HOME}/pkg/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar ${ACCUMULO_HOME}/lib/ext/
-  [[ "$hbase_enable" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/hbase/* ${HBASE_HOME}/conf/
+  [[ "$acc_enabledd" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/accumulo/* ${ACCUMULO_HOME}/conf/
+  [[ "$geomesa_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/pkg/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar ${ACCUMULO_HOME}/lib/ext/
+  [[ "$hbase_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/hbase/* ${HBASE_HOME}/conf/
 
   # If Spark doesn't have log4j settings, use the Spark defaults
   test -f $SPARK_HOME/conf/log4j.properties || cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
@@ -189,7 +200,7 @@ function start_first_time {
   # sleep 
   sleep 5
   
-  if [[ "$acc_enable" -eq 1 ]]; then
+  if [[ "$acc_enabledd" -eq 1 ]]; then
     # init accumulo
     echo "Initializing accumulo"
     $ACCUMULO_HOME/bin/accumulo init --instance-name $cl_acc_inst_name --password $cl_acc_inst_pass
@@ -202,7 +213,7 @@ function start_first_time {
     $ACCUMULO_HOME/bin/start-all.sh
   fi
 
-  if [[ "$hbase_enable" -eq 1 ]]; then
+  if [[ "$hbase_enabled" -eq 1 ]]; then
     # start hbase
     echo "starting hbase..."
     ${HBASE_HOME}/bin/start-hbase.sh
@@ -231,13 +242,13 @@ function start_cloud {
   echo "Waiting for HDFS to exit safemode..."
   hdfs dfsadmin -safemode wait
 
-  if [[ "$acc_enable" -eq 1 ]]; then
+  if [[ "$acc_enabled" -eq 1 ]]; then
     # starting accumulo
     echo "starting accumulo..."
     $ACCUMULO_HOME/bin/start-all.sh
   fi
 
-  if [[ "$hbase_enable" -eq 1 ]]; then
+  if [[ "$hbase_enabled" -eq 1 ]]; then
     # start hbase
     echo "starting hbase..."
     ${HBASE_HOME}/bin/start-hbase.sh
@@ -254,12 +265,12 @@ function stop_cloud {
   echo "Stopping kafka..."
   $KAFKA_HOME/bin/kafka-server-stop.sh
 
-  if [[ "$acc_enable" -eq 1 ]]; then
+  if [[ "$acc_enabled" -eq 1 ]]; then
     echo "Stopping accumulo..."
     $ACCUMULO_HOME/bin/stop-all.sh
   fi
 
-  if [[ "$hbase_enable" -eq 1 ]]; then
+  if [[ "$hbase_enabled" -eq 1 ]]; then
     echo "Stopping hbase..."
     ${HBASE_HOME}/bin/stop-hbase.sh
   fi
@@ -280,8 +291,8 @@ function stop_yarn {
 }
 
 function clear_sw {
-  [[ "$acc_enable" -eq 1 ]] && rm -rf "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}"
-  [[ "$hbase_enable" -eq 1 ]] && rm -rf "${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
+  [[ "$acc_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}"
+  [[ "$hbase_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
   [[ -d "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"  ]] && rm -rf "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"
   rm -rf "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}"
   rm -rf "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
