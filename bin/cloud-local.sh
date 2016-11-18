@@ -284,6 +284,7 @@ function clear_data {
 
 function show_help {
   echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|clean|help)"
+	echo "If the environment variable GEOSERVER_HOME is set then the parameter '-gs' may be used with 'start' to automatically start/stop GeoServer with the cloud."
 }
 
 if [ "$#" -ne 1 ]; then
@@ -305,6 +306,10 @@ elif [[ $1 == 'start' ]]; then
   echo "Starting cloud..."
   start_cloud
   echo "Cloud Started"
+  if [[ $2 == '-gs' && -n "${GEOSERVER_HOME}" ]]; then
+    trap stop_cloud SIGINT
+    ($GEOSERVER_HOME/bin/startup.sh)
+  fi
 elif [[ $1 == 'stop' ]]; then
   echo "Stopping Cloud..."
   stop_cloud

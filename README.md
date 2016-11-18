@@ -92,6 +92,14 @@ Port offseting moves the entire port space by a given numerical amount in order 
 
 WARNING - you should stop and clean cloud-local before changing any of these parameters since they will modify the config and may prevent cloud-local from cleanly shutting down. Changing port offsets is supported by XML comments in the accumulo and hadoop config files. Removing or changing these comments (CL_port_default) will likely cause failures.
 
+## GoeServer
+
+If you have the environment variable GEOSERVER_HOME set you can use this parameter to start GeoServer at the same time but running in a child thread.
+	
+	bin/cloud-local.sh start -gs
+
+You can then use ctrl+c to stop GeoServer, when it finishes shutting down, cloud-local will envoke it's own stop command to shutdown the rest of the cloud. 
+
 ## Maintenance
 
 The `cloud-local.sh` script provides options for maintenance. Best to stop the cloud before performing any of these tasks. Pass in the parameter `clean` to remove software (but not the tar.gz's) and data. The parameter `reconfigure` will first `clean` then `init`.
