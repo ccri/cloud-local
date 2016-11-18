@@ -66,6 +66,10 @@ function set_env_vars {
   export YARN_IDENT_STRING="${HADOOP_IDENT_STRING}"
 
   export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-without-hadoop"
+  
+  export GEOSERVER_DATA_DIR="${CLOUD_HOME}/data/geoserver"
+  export GEOSERVER_PID_DIR="${GEOSERVER_DATA_DIR}/pid"
+  export GEOSERVER_LOG_DIR="${GEOSERVER_DATA_DIR}/log"  
 
   [[ $acc_enable -eq 1 ]] && export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
   [[ $hbase_enable -eq 1 ]] && export HBASE_HOME="${CLOUD_HOME}/hbase-${pkg_hbase_ver}"

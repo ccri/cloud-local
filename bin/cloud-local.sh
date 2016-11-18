@@ -3,7 +3,7 @@
 # thanks accumulo for these resolutions snippets
 # Start: Resolve Script Directory
 SOURCE="${BASH_SOURCE[0]}"
-while [ -h "${SOURCE}" ]; do # resolve $SOURCE until the file is no longer a symlink
+while [[ -h "${SOURCE}" ]]; do # resolve $SOURCE until the file is no longer a symlink
    bin="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
    SOURCE="$(readlink "${SOURCE}")"
    [[ "${SOURCE}" != /* ]] && SOURCE="${bin}/${SOURCE}" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
@@ -37,7 +37,7 @@ function download_packages() {
   test -d ${CLOUD_HOME}/pkg || mkdir ${CLOUD_HOME}/pkg
   
   local mirror
-  if [ -z ${pkg_src_mirror+x} ]; then
+  if [[ -z ${pkg_src_mirror+x} ]]; then
     local mirror=$(curl 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g' | head -1)
   else
     local mirror=${pkg_src_mirror}
@@ -179,15 +179,22 @@ function start_first_time {
     sleep 5
 
     # starting accumulo
-    echo "starting accumulo..."
+    echo "Starting accumulo..."
     $ACCUMULO_HOME/bin/start-all.sh
   fi
 
   if [[ "$hbase_enable" -eq 1 ]]; then
     # start hbase
-    echo "starting hbase..."
+    echo "Starting hbase..."
     ${HBASE_HOME}/bin/start-hbase.sh
   fi
+
+  # init GeoServer Support
+  mkdir -p "${GEOSERVER_DATA_DIR}"
+  mkdir "${GEOSERVER_PID_DIR}"
+  mkdir "${GEOSERVER_LOG_DIR}"
+  touch "${GEOSERVER_PID_DIR}/geoserver.pid"
+  touch "${GEOSERVER_LOG_DIR}/std.out"
 }
 
 function start_cloud {
@@ -213,15 +220,25 @@ function start_cloud {
   hdfs dfsadmin -safemode wait
 
   if [[ "$acc_enable" -eq 1 ]]; then
-    # starting accumulo
-    echo "starting accumulo..."
+    # Starting accumulo
+    echo "Starting accumulo..."
     $ACCUMULO_HOME/bin/start-all.sh
   fi
 
   if [[ "$hbase_enable" -eq 1 ]]; then
     # start hbase
-    echo "starting hbase..."
+    echo "Starting hbase..."
     ${HBASE_HOME}/bin/start-hbase.sh
+  fi
+
+  if [[ "${geoserver_enabled}" -eq "1" ]]; then
+    echo "Starting GeoServer..."
+    (${GEOSERVER_HOME}/bin/startup.sh &> ${GEOSERVER_LOG_DIR}/std.out) &
+    GEOSERVER_PID=$!
+    echo "${GEOSERVER_PID}" > ${GEOSERVER_PID_DIR}/geoserver.pid
+    echo "GeoServer Process Started"
+    echo "PID: ${GEOSERVER_PID}"
+    echo "GeoServer Out: ${GEOSERVER_LOG_DIR}/std.out"
   fi
 }
 
@@ -253,6 +270,17 @@ function stop_cloud {
  
   echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
+
+  if [[ "${geoserver_enabled}" -eq "1" ]]; then
+    echo "Stopping GeoServer..."
+    GEOSERVER_PID=`cat ${GEOSERVER_PID_DIR}/geoserver.pid`
+    if [[ -n "${GEOSERVER_PID}" ]]; then
+      kill -15 ${GEOSERVER_PID}
+      echo "TERM signal sent to process PID:${GEOSERVER_PID}"
+    else 
+      echo "No GeoServer PID was saved. This script must be used to start GeoServer in order for this script to be able to stop it."
+    fi
+  fi
 }
 
 function stop_yarn {
@@ -268,7 +296,7 @@ function clear_sw {
   rm -rf "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
   rm -rf "${CLOUD_HOME}/spark-${pkg_spark_ver}-bin-without-hadoop"
   rm -rf "${CLOUD_HOME}/tmp"
-  if [ -a "${CLOUD_HOME}/zookeeper.out" ]; then rm "${CLOUD_HOME}/zookeeper.out"; fi #hahahaha
+  if [[ -a "${CLOUD_HOME}/zookeeper.out" ]]; then rm "${CLOUD_HOME}/zookeeper.out"; fi #hahahaha
 }
 
 function clear_data {
@@ -279,15 +307,23 @@ function clear_data {
   rm -rf ${CLOUD_HOME}/data/dfs/name/*
   rm -rf ${CLOUD_HOME}/data/hadoop/tmp/*
   rm -rf ${CLOUD_HOME}/data/hadoop/pid/*
-  if [ -d "${CLOUD_HOME}/data/kafka-logs" ]; then rm -rf ${CLOUD_HOME}/data/kafka-logs; fi # intentionally to clear dot files
+  if [[ -d "${CLOUD_HOME}/data/kafka-logs" ]]; then rm -rf ${CLOUD_HOME}/data/kafka-logs; fi # intentionally to clear dot files
 }
 
 function show_help {
   echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|clean|help)"
-	echo "If the environment variable GEOSERVER_HOME is set then the parameter '-gs' may be used with 'start' to automatically start/stop GeoServer with the cloud."
+  echo "If the environment variable GEOSERVER_HOME is set then the parameter '-gs' may be used with 'start' to automatically start/stop GeoServer with the cloud."
 }
 
-if [ "$#" -ne 1 ]; then
+if [[ "$2" -eq "-gs" ]]; then
+  if [[ -n "${GEOSERVER_HOME}" && -e $GEOSERVER_HOME/bin/startup.sh ]]; then
+      geoserver_enabled=1
+  else
+    echo "The environment variable GEOSERVER_HOME is not set or is not valid."
+  fi
+fi
+
+if [[ "$#" -ne 1 && "${geoserver_enabled}" -ne "1" ]]; then
   show_help
   exit 1
 fi
@@ -306,10 +342,6 @@ elif [[ $1 == 'start' ]]; then
   echo "Starting cloud..."
   start_cloud
   echo "Cloud Started"
-  if [[ $2 == '-gs' && -n "${GEOSERVER_HOME}" ]]; then
-    trap stop_cloud SIGINT
-    ($GEOSERVER_HOME/bin/startup.sh)
-  fi
 elif [[ $1 == 'stop' ]]; then
   echo "Stopping Cloud..."
   stop_cloud
