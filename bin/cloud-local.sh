@@ -300,14 +300,19 @@ function clear_sw {
 }
 
 function clear_data {
-  # TODO prompt
-  rm -rf ${CLOUD_HOME}/data/yarn/*
-  rm -rf ${CLOUD_HOME}/data/zookeeper/*
-  rm -rf ${CLOUD_HOME}/data/dfs/data/*
-  rm -rf ${CLOUD_HOME}/data/dfs/name/*
-  rm -rf ${CLOUD_HOME}/data/hadoop/tmp/*
-  rm -rf ${CLOUD_HOME}/data/hadoop/pid/*
-  if [[ -d "${CLOUD_HOME}/data/kafka-logs" ]]; then rm -rf ${CLOUD_HOME}/data/kafka-logs; fi # intentionally to clear dot files
+  read -r -p "Are you sure you want to clear data directories? [y/N] " confirm
+  confirm=${confirm,,} #lowercasing
+  if [[ $confirm =~ ^(yes|y) ]]; then
+    rm -rf ${CLOUD_HOME}/data/yarn/*
+    rm -rf ${CLOUD_HOME}/data/zookeeper/*
+    rm -rf ${CLOUD_HOME}/data/dfs/data/*
+    rm -rf ${CLOUD_HOME}/data/dfs/name/*
+    rm -rf ${CLOUD_HOME}/data/hadoop/tmp/*
+    rm -rf ${CLOUD_HOME}/data/hadoop/pid/*
+    rm -rf ${CLOUD_HOME}/data/geoserver/pid/*
+    rm -rf ${CLOUD_HOME}/data/geoserver/log/*
+    if [[ -d "${CLOUD_HOME}/data/kafka-logs" ]]; then rm -rf ${CLOUD_HOME}/data/kafka-logs; fi # intentionally to clear dot files
+  fi
 }
 
 function show_help {
