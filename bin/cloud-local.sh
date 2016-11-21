@@ -251,15 +251,9 @@ function start_cloud {
   echo "Waiting for HDFS to exit safemode..."
   hdfs dfsadmin -safemode wait
 
-<<<<<<< HEAD
-  if [[ "$acc_enable" -eq 1 ]]; then
-    # Starting accumulo
-    echo "Starting accumulo..."
-=======
   if [[ "$acc_enabled" -eq 1 ]]; then
     # starting accumulo
     echo "starting accumulo..."
->>>>>>> fcr_scala_wget_-c
     $ACCUMULO_HOME/bin/start-all.sh
   fi
 
@@ -288,6 +282,7 @@ function start_geoserver {
     echo "GeoServer Out: ${GEOSERVER_LOG_DIR}/std.out"
   fi
 }
+
 function stop_cloud {
 
   echo "Stopping kafka..."
@@ -313,6 +308,63 @@ function stop_cloud {
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 
   stop_geoserver
+
+  verify_stop
+}
+
+function psaux {
+  ps aux | grep -i "$1"
+}
+
+function verify_stop {
+  # Find Processes
+  local kafka=`psaux "[k]afka"`
+  local accumulo=`psaux "[a]ccumulo"`
+  local hbase=`psaux "[h]base"`
+  local yarn=`psaux "[y]arn"`
+  local zookeeper=`psaux "[z]ookeeper"`
+  local hadoop=`psaux "[h]adoop"`
+  local geoserver=`psaux "[g]eoserver"`
+
+  local res="$kafka$accumulo$hbase$yarn$zookeeper$geoserver"
+  if [[ -n "${res}" ]]; then
+    echo "The following services do not appear to be shutdown:"
+    if [[ -n "${kafka}" ]]; then
+      echo "${NL}Kafka"
+      psaux "[k]afka"
+    fi
+    if [[ -n "${accumulo}" ]]; then
+      echo "${NL}Accumulo"
+      psaux "[a]ccumulo"
+    fi
+    if [[ -n "${hbase}" ]]; then
+      echo "${NL}HBase"
+      psaux "[h]base"
+    fi
+    if [[ -n "${yarn}" ]]; then
+      echo "${NL}Yarn"
+      psaux "[y]arn"
+    fi
+    if [[ -n "${zookeeper}" ]]; then
+      echo "${NL}Zookeeper"
+      psaux "[z]ookeeper"
+    fi
+    if [[ -n "${hadoop}" ]]; then
+      echo "${NL}Hadoop"
+      psaux "[h]adoop"
+    fi
+    if [[ -n "${geoserver}" ]]; then
+      echo "${NL}GeoServer"
+      psaux "[g]eoserver"
+    fi
+    read -r -p "Would you like to continue? [Y/n] " confirm
+    confirm=${confirm,,} #lowercasing
+    if [[ $confirm =~ ^(yes|y) || $confirm == "" ]]; then
+      return 0
+    else
+      exit 1
+    fi
+  fi
 }
 
 function stop_yarn {
@@ -367,8 +419,6 @@ function show_help {
   echo "If the environment variable GEOSERVER_HOME is set then the parameter '-gs' may be used with 'start' to automatically start/stop GeoServer with the cloud."
 }
 
-NL=$'\n'
-
 if [[ "$2" -eq "-gs" ]]; then
   if [[ -n "${GEOSERVER_HOME}" && -e $GEOSERVER_HOME/bin/startup.sh ]]; then
       geoserver_enabled=1
@@ -387,7 +437,7 @@ if [[ $1 == 'init' ]]; then
 elif [[ $1 == 'reconfigure' ]]; then
   echo "reconfiguring..."
   #TODO ensure everything is stopped? prompt to make sure?
-  clear_sw && clear_data && unpackage && configure && start_first_time
+  stop_cloud && clear_sw && clear_data && unpackage && configure && start_first_time
 elif [[ $1 == 'clean' ]]; then
   echo "cleaning..."
   clear_sw && clear_data
