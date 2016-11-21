@@ -150,7 +150,7 @@ function configure {
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
   cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
-  [[ "$acc_enabledd" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/accumulo/* ${ACCUMULO_HOME}/conf/
+  [[ "$acc_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/accumulo/* ${ACCUMULO_HOME}/conf/
   [[ "$geomesa_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/pkg/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar ${ACCUMULO_HOME}/lib/ext/
   [[ "$hbase_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/hbase/* ${HBASE_HOME}/conf/
 
@@ -200,7 +200,7 @@ function start_first_time {
   # sleep 
   sleep 5
   
-  if [[ "$acc_enabledd" -eq 1 ]]; then
+  if [[ "$acc_enabled" -eq 1 ]]; then
     # init accumulo
     echo "Initializing accumulo"
     $ACCUMULO_HOME/bin/accumulo init --instance-name $cl_acc_inst_name --password $cl_acc_inst_pass
@@ -298,6 +298,7 @@ function clear_sw {
   rm -rf "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
   rm -rf "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
   rm -rf "${CLOUD_HOME}/spark-${pkg_spark_ver}-bin-without-hadoop"
+  rm -rf "${CLOUD_HOME}/scala-${pkg_scala_ver}"
   rm -rf "${CLOUD_HOME}/tmp"
   if [ -a "${CLOUD_HOME}/zookeeper.out" ]; then rm "${CLOUD_HOME}/zookeeper.out"; fi #hahahaha
 }
