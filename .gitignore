@@ -9,6 +9,7 @@ data/*
 /spark*
 /scala*
 /geomesa*
+/scala*
 /.idea
 /cloud-local.iml
 *.iml
