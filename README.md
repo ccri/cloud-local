@@ -95,10 +95,18 @@ WARNING - you should stop and clean cloud-local before changing any of these par
 ## GoeServer
 
 If you have the environment variable GEOSERVER_HOME set you can use this parameter to start GeoServer at the same time but running in a child thread.
-	
-	bin/cloud-local.sh start -gs
 
-You can then use ctrl+c to stop GeoServer, when it finishes shutting down, cloud-local will envoke it's own stop command to shutdown the rest of the cloud. 
+    bin/cloud-local.sh start -gs
+
+Similarly, you can instruct cloud-local to shutdown GeoServer with the cloud using:
+
+    bin/cloud-local.sh stop -gs
+    
+Additionally, if you need to restart GeoServer you may use the command `regeoserver`:
+
+    bin/cloud-local.sh regeoserver
+    
+The GeoServer PID is stored in `$CLOUD_HOME/data/geoserver/pid/geoserver.pid` and GeoServer's stdout is redirected to `$CLOUD_HOME/data/geoserver/log/std.out`.
 
 ## Maintenance
 

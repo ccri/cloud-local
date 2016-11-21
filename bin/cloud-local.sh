@@ -195,6 +195,8 @@ function start_first_time {
   mkdir "${GEOSERVER_LOG_DIR}"
   touch "${GEOSERVER_PID_DIR}/geoserver.pid"
   touch "${GEOSERVER_LOG_DIR}/std.out"
+
+  start_geoserver
 }
 
 function start_cloud {
@@ -231,6 +233,15 @@ function start_cloud {
     ${HBASE_HOME}/bin/start-hbase.sh
   fi
 
+  start_geoserver
+}
+
+function start_yarn {
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
+  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+}
+
+function start_geoserver {
   if [[ "${geoserver_enabled}" -eq "1" ]]; then
     echo "Starting GeoServer..."
     (${GEOSERVER_HOME}/bin/startup.sh &> ${GEOSERVER_LOG_DIR}/std.out) &
@@ -241,12 +252,6 @@ function start_cloud {
     echo "GeoServer Out: ${GEOSERVER_LOG_DIR}/std.out"
   fi
 }
-
-function start_yarn {
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
-}
-
 function stop_cloud {
 
   echo "Stopping kafka..."
@@ -271,21 +276,25 @@ function stop_cloud {
   echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 
-  if [[ "${geoserver_enabled}" -eq "1" ]]; then
-    echo "Stopping GeoServer..."
-    GEOSERVER_PID=`cat ${GEOSERVER_PID_DIR}/geoserver.pid`
-    if [[ -n "${GEOSERVER_PID}" ]]; then
-      kill -15 ${GEOSERVER_PID}
-      echo "TERM signal sent to process PID:${GEOSERVER_PID}"
-    else 
-      echo "No GeoServer PID was saved. This script must be used to start GeoServer in order for this script to be able to stop it."
-    fi
-  fi
+  stop_geoserver
 }
 
 function stop_yarn {
   $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop resourcemanager
   $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop nodemanager
+}
+
+function stop_geoserver {
+  if [[ "${geoserver_enabled}" -eq "1" ]]; then
+    echo "Stopping GeoServer..."
+    GEOSERVER_PID=`cat ${GEOSERVER_PID_DIR}/geoserver.pid`
+    if [[ -n "${GEOSERVER_PID}" ]]; then
+      kill -15 ${GEOSERVER_PID}
+      echo "TERM signal sent to process PID: ${GEOSERVER_PID}"
+    else
+      echo "No GeoServer PID was saved. This script must be used to start GeoServer in order for this script to be able to stop it."
+    fi
+  fi
 }
 
 function clear_sw {
@@ -316,7 +325,7 @@ function clear_data {
 }
 
 function show_help {
-  echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|clean|help)"
+  echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|regeoserver|clean|help)"
   echo "If the environment variable GEOSERVER_HOME is set then the parameter '-gs' may be used with 'start' to automatically start/stop GeoServer with the cloud."
 }
 
@@ -356,6 +365,9 @@ elif [[ $1 == 'reyarn' ]]; then
   stop_yarn
   echo "Starting Yarn..."
   start_yarn
+elif [[ $1 == 'regeoserver' ]]; then
+  stop_geoserver
+  start_geoserver
 else
   show_help
 fi
