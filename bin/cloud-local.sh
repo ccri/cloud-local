@@ -40,12 +40,12 @@ function download_packages() {
   if [[ "${geomesa_enabled}" -eq "1" ]]; then
     gm="geomesa-accumulo-dist_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}-bin.tar.gz"
     url="http://art.ccri.com:8081/artifactory/libs-release-local/org/locationtech/geomesa/geomesa-accumulo-dist_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
-    wget -c -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
-      || {rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"}
+    wget -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
+      || { rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"; };
     gm="geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar"
     url="http://art.ccri.com:8081/artifactory/libs-release-local/org/locationtech/geomesa/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
-    wget -c -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
-      || {rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"}
+    wget -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
+      || { rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"; };
   fi
 
   local mirror
@@ -74,7 +74,7 @@ function download_packages() {
   for x in "${urls[@]}"; do
       fname=$(basename "$x");
       echo "fetching ${x}";
-      wget -c -O "${CLOUD_HOME}/pkg/${fname}" "$x" || { rm -f "${CLOUD_HOME}/pkg/${fname}"; echo "Error Downloading: ${fname}"; errorList="${errorList} ${x} ${NL}"};
+      wget -O "${CLOUD_HOME}/pkg/${fname}" "$x" || { rm -f "${CLOUD_HOME}/pkg/${fname}"; echo "Error Downloading: ${fname}"; errorList="${errorList} ${x} ${NL}"; };
   done 
 
   if [[ -n "${errorList}" ]]; then
