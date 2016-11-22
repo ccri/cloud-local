@@ -23,22 +23,26 @@ if [ ! -d "${CLOUD_HOME}" ]; then
 fi
 
 # [Tab] shell completion because i'm lazy
-IFS=$'\n' complete -W "init start stop reconfigure clean help" cloud-local.sh
+IFS=$'\n' complete -W "init start stop reconfigure regeoserver reyarn clean help" cloud-local.sh
+NL=$'\n'
 
 function validate_config {
-  # todo validate versions?
   # allowed versions are hadoop 2.[567].x, zk 3.4.[56], acc 1.[67].x
   local pkg_error=""
   if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.][567][.]. ]]; then
-    pkg_error="Invalid hadoop version: '${pkg_hadoop_ver}'"
-  elif [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.][56] ]]; then
-    pkg_error="Invalid zookeeper version: '${pkg_zookeeper_ver}'"
-  elif [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][67][.]. ]]; then
-    pkg_error="Invalid accumulo version: '${pkg_accumulo_ver}'"
-  elif [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ 0[.]9[.].+ ]]; then
-    pkg_error="Invalid kafka version: '${pkg_kafka_ver}'"
-  elif [[ -z "$pkg_geomesa_scala_ver" && $pkg_geomesa_ver =~ 1[.]3[.].+ ]]; then
-    pkg_error="Invalid GeoMesa Scala version: '${pkg_geomesa_scala_ver}'"
+    pkg_error="${pkg_error}Invalid hadoop version: '${pkg_hadoop_ver}' ${NL}"
+  fi
+  if [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.][56] ]]; then
+    pkg_error="${pkg_error}Invalid zookeeper version: '${pkg_zookeeper_ver}' ${NL}"
+  fi
+  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][67][.]. ]]; then
+    pkg_error="${pkg_error}Invalid accumulo version: '${pkg_accumulo_ver}' ${NL}"
+  fi
+  if [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ 0[.]9[.].+ ]]; then
+    pkg_error="${pkg_error}Invalid kafka version: '${pkg_kafka_ver}' ${NL}"
+  fi
+  if [[ -z "$pkg_geomesa_scala_ver" && $pkg_geomesa_ver =~ 1[.]3[.].+ ]]; then
+    pkg_error="${pkg_error}Invalid GeoMesa Scala version: '${pkg_geomesa_scala_ver}' ${NL}"
   fi
   
   if [[ ! -z "$pkg_error" ]]; then
@@ -50,9 +54,9 @@ function validate_config {
 }
 
 function set_env_vars {
-  unset GEOMESA_HOME
-  unset GEOMESA_BIN
-  if [[ ! -z "$pkg_geomesa_ver" ]]; then
+  if [[ $geomesa_enabled -eq "1" ]]; then
+    unset GEOMESA_HOME
+    unset GEOMESA_BIN
     export GEOMESA_HOME="${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"
     export GEOMESA_BIN="${GEOMESA_HOME}/bin:"
     echo "Setting GEOMESA_HOME:  ${GEOMESA_HOME}"
@@ -76,13 +80,17 @@ function set_env_vars {
   export YARN_IDENT_STRING="${HADOOP_IDENT_STRING}"
 
   export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-without-hadoop"
+  
+  export GEOSERVER_DATA_DIR="${CLOUD_HOME}/data/geoserver"
+  export GEOSERVER_PID_DIR="${GEOSERVER_DATA_DIR}/pid"
+  export GEOSERVER_LOG_DIR="${GEOSERVER_DATA_DIR}/log"  
 
-  [[ $acc_enable -eq 1 ]] && export ACCUMULO_HOME="$CLOUD_HOME/accumulo-${pkg_accumulo_ver}"
-  [[ $hbase_enable -eq 1 ]] && export HBASE_HOME="${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
+  [[ "${acc_enabled}" -eq "1" ]] && export ACCUMULO_HOME="${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}"
+  [[ "${hbase_enabled}" -eq "1" ]] && export HBASE_HOME="${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
   
   export PATH="$GEOMESA_BIN"$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
-  [[ $acc_enable -eq 1 ]] && export PATH="${ACCUMULO_HOME}/bin:${PATH}"
-  [[ $hbase_enable -eq 1 ]] && export PATH="${HBASE_HOME}/bin:${PATH}"
+  [[ "${acc_enabled}" -eq "1" ]] && export PATH="${ACCUMULO_HOME}/bin:${PATH}"
+  [[ "${hbase_enabled}" -eq "1" ]] && export PATH="${HBASE_HOME}/bin:${PATH}"
 
   # This variable requires Hadoop executable, which will fail during certain runs/steps
   export SPARK_DIST_CLASSPATH=$(hadoop classpath 2>/dev/null)
