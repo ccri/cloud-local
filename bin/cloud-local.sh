@@ -284,6 +284,7 @@ function start_geoserver {
 }
 
 function stop_cloud {
+  verify_stop
 
   echo "Stopping kafka..."
   $KAFKA_HOME/bin/kafka-server-stop.sh
@@ -308,8 +309,6 @@ function stop_cloud {
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 
   stop_geoserver
-
-  verify_stop
 }
 
 function psaux {
