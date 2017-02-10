@@ -32,6 +32,7 @@ This init script does several things:
 * initialize accumulo/hbase
 * start up zookeeper, hadoop, and accumulo/hbase
 * start kafka broker
+* install and start Zeppelin
 * install GeoMesa Accumulo iterators
 * install GeoMesa command-line tools
 
@@ -53,6 +54,7 @@ After installing it you should be able to reach your standard cloud urls:
 * Accumulo:    http://localhost:50095
 * Hadoop DFS:  http://localhost:50070
 * Job Tracker: http://localhost:8088
+* Zeppelin:    http://localhost:5771
 
 ## Getting Help
 
@@ -110,6 +112,29 @@ Additionally, if you need to restart GeoServer you may use the command `regeoser
     bin/cloud-local.sh regeoserver
     
 The GeoServer PID is stored in `$CLOUD_HOME/data/geoserver/pid/geoserver.pid` and GeoServer's stdout is redirected to `$CLOUD_HOME/data/geoserver/log/std.out`.
+
+## Zeppelin
+
+Zeppelin is *disabled* by default.
+
+Currently, we are using the Zeppelin distribution that includes all of the interpreters, and
+it is configured to run against Spark only in local mode.  If you want to connect to another
+(real) cloud, you will have to configure that manually; see:
+
+[Zeppelin documentation](http://zeppelin.apache.org/docs/0.7.0/install/spark_cluster_mode.html#spark-on-yarn-mode)
+
+### GeoMesa Spark-SQL on Zeppelin
+
+To enable GeoMesa's Spark-SQL within Zeppelin:
+
+1.  point your browser to your [local Zeppelin interpreter configuration](http://localhost:5771/#/interpreter)
+1.  scroll to the bottom where the *Spark* interpreter configuration appears
+1.  within the _Dependencies_ section, add these two JARs (either as full, local file names or as Maven GAV coordinates):
+    1.  geomesa-spark-sql_2.11-1.3.0.jar
+    1.  geomesa-accumulo-spark-runtime_2.11-1.3.0.jar
+1.  after you add the second dependency, click to restart the Spark intepreter (this will be a pop-up that appears after you add each of the JARs)
+
+That's it!  There is no need to restart any of the cloud-local services.
 
 ## Maintenance
 

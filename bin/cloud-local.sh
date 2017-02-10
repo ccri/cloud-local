@@ -79,6 +79,10 @@ function download_packages {
     urls=("${urls[@]}" "${mirror}/hbase/${pkg_hbase_ver}/hbase-${pkg_hbase_ver}-bin.tar.gz")
   fi
 
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    urls=("${urls[@]}" "${mirror}zeppelin/zeppelin-${pkg_zeppelin_ver}/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz")
+  fi
+
   for x in "${urls[@]}"; do
       fname=$(basename "$x");
       echo "fetching ${x}";
@@ -108,6 +112,7 @@ function unpackage {
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz") && echo "Unpacked zookeeper"
   [[ "$acc_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz") && echo "Unpacked accumulo"
   [[ "$hbase_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hbase-${pkg_hbase_ver}-bin.tar.gz") && echo "Unpacked hbase"
+  [[ "$zeppelin_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz") && echo "Unpacked zeppelin"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz") && echo "Unpacked hadoop"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz") && echo "Unpacked kafka"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz") && echo "Unpacked spark"
@@ -139,6 +144,11 @@ function configure {
     echo "${CL_HOSTNAME}" > ${HBASE_HOME}/conf/regionservers
   fi
 
+  # Zeppelin configuration
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    echo "[WARNING]  Zeppelin configuration is only template-based for now!"
+  fi
+
   # hadoop slaves file
   echo "${CL_HOSTNAME}" > ${CLOUD_HOME}/tmp/staging/hadoop/slaves
 
@@ -153,6 +163,7 @@ function configure {
   [[ "$acc_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/accumulo/* ${ACCUMULO_HOME}/conf/
   [[ "$geomesa_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/pkg/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar ${ACCUMULO_HOME}/lib/ext/
   [[ "$hbase_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/hbase/* ${HBASE_HOME}/conf/
+  [[ "$zeppelin_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/zeppelin/* ${ZEPPELIN_HOME}/conf/
 
   # If Spark doesn't have log4j settings, use the Spark defaults
   test -f $SPARK_HOME/conf/log4j.properties || cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
@@ -219,6 +230,12 @@ function start_first_time {
     ${HBASE_HOME}/bin/start-hbase.sh
   fi
 
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    # start zeppelin
+    echo "Starting zeppelin..."
+    ${ZEPPELIN_HOME}/bin/zeppelin-daemon.sh start
+  fi
+
   # init GeoServer Support
   mkdir -p "${GEOSERVER_DATA_DIR}"
   mkdir "${GEOSERVER_PID_DIR}"
@@ -263,6 +280,12 @@ function start_cloud {
     ${HBASE_HOME}/bin/start-hbase.sh
   fi
 
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    # start zeppelin
+    echo "Starting zeppelin..."
+    ${ZEPPELIN_HOME}/bin/zeppelin-daemon.sh start
+  fi
+
   start_geoserver
 }
 
@@ -284,6 +307,11 @@ function start_geoserver {
 }
 
 function stop_cloud {
+
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    echo "Stopping zeppelin..."
+    ${ZEPPELIN_HOME}/bin/zeppelin-daemon.sh stop
+  fi
 
   echo "Stopping kafka..."
   $KAFKA_HOME/bin/kafka-server-stop.sh
@@ -318,6 +346,7 @@ function psaux {
 
 function verify_stop {
   # Find Processes
+  local zeppelin=`psaux "[z]eppelin"`
   local kafka=`psaux "[k]afka"`
   local accumulo=`psaux "[a]ccumulo"`
   local hbase=`psaux "[h]base"`
@@ -326,9 +355,13 @@ function verify_stop {
   local hadoop=`psaux "[h]adoop"`
   local geoserver=`psaux "[g]eoserver"`
 
-  local res="$kafka$accumulo$hbase$yarn$zookeeper$geoserver"
+  local res="$zeppelin$kafka$accumulo$hbase$yarn$zookeeper$geoserver"
   if [[ -n "${res}" ]]; then
     echo "The following services do not appear to be shutdown:"
+    if [[ -n "${zeppelin}" ]]; then
+      echo "${NL}Zeppelin"
+      psaux "[z]eppelin"
+    fi
     if [[ -n "${kafka}" ]]; then
       echo "${NL}Kafka"
       psaux "[k]afka"
@@ -386,6 +419,7 @@ function stop_geoserver {
 }
 
 function clear_sw {
+  [[ "$zeppelin_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/zeppelin-${pkg_zeppelin_ver}"
   [[ "$acc_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}"
   [[ "$hbase_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
   [[ -d "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"  ]] && rm -rf "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"
