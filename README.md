@@ -129,10 +129,10 @@ To enable GeoMesa's Spark-SQL within Zeppelin:
 
 1.  point your browser to your [local Zeppelin interpreter configuration](http://localhost:5771/#/interpreter)
 1.  scroll to the bottom where the *Spark* interpreter configuration appears
-1.  within the _Dependencies_ section, add these two JARs (either as full, local file names or as Maven GAV coordinates):
-    1.  geomesa-spark-sql_2.11-1.3.0.jar
+1.  click on the "edit" button next to the interpreter name (on the right-hand side of the UI)
+1.  within the _Dependencies_ section, add this one JAR (either as a full, local file name or as Maven GAV coordinates):
     1.  geomesa-accumulo-spark-runtime_2.11-1.3.0.jar
-1.  after you add the second dependency, click to restart the Spark intepreter (this will be a pop-up that appears after you add each of the JARs)
+1.  when prompted by the pop-up, click to restart the Spark intepreter
 
 That's it!  There is no need to restart any of the cloud-local services.
 
