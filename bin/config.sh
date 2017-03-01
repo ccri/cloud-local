@@ -54,6 +54,10 @@ function validate_config {
 }
 
 function set_env_vars {
+  if [[ $zeppelin_enabled -eq "1" ]]; then
+    export ZEPPELIN_HOME="${CLOUD_HOME}/zeppelin-${pkg_zeppelin_ver}-bin-all"
+  fi
+
   if [[ $geomesa_enabled -eq "1" ]]; then
     unset GEOMESA_HOME
     unset GEOMESA_BIN
@@ -79,8 +83,8 @@ function set_env_vars {
   export YARN_PID_DIR="${HADOOP_PID_DIR}"
   export YARN_IDENT_STRING="${HADOOP_IDENT_STRING}"
 
-  export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-without-hadoop"
-  
+  export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}"
+
   export GEOSERVER_DATA_DIR="${CLOUD_HOME}/data/geoserver"
   export GEOSERVER_PID_DIR="${GEOSERVER_DATA_DIR}/pid"
   export GEOSERVER_LOG_DIR="${GEOSERVER_DATA_DIR}/log"  
@@ -91,9 +95,10 @@ function set_env_vars {
   export PATH="$GEOMESA_BIN"$ZOOKEEPER_HOME/bin:$KAFKA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
   [[ "${acc_enabled}" -eq "1" ]] && export PATH="${ACCUMULO_HOME}/bin:${PATH}"
   [[ "${hbase_enabled}" -eq "1" ]] && export PATH="${HBASE_HOME}/bin:${PATH}"
+  [[ "${zeppelin_enabled}" -eq "1" ]] && export PATH="${ZEPPELIN_HOME}/bin:${PATH}"
 
   # This variable requires Hadoop executable, which will fail during certain runs/steps
-  export SPARK_DIST_CLASSPATH=$(hadoop classpath 2>/dev/null)
+  [[ "$pkg_spark_hadoop_ver" = "without-hadoop" ]] && export SPARK_DIST_CLASSPATH=$(hadoop classpath 2>/dev/null)
 }
 
 if [[ -z "$JAVA_HOME" ]];then

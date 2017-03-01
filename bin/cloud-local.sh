@@ -69,7 +69,7 @@ function download_packages {
   declare -a urls=("${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
                    "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
                    "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz"
-                   "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-without-hadoop.tgz")
+                   "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz")
 
   if [[ "$acc_enabled" -eq 1 ]]; then
     urls=("${urls[@]}" "${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
@@ -77,6 +77,10 @@ function download_packages {
 
   if [[ "$hbase_enabled" -eq 1 ]]; then
     urls=("${urls[@]}" "${mirror}/hbase/${pkg_hbase_ver}/hbase-${pkg_hbase_ver}-bin.tar.gz")
+  fi
+
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    urls=("${urls[@]}" "${mirror}zeppelin/zeppelin-${pkg_zeppelin_ver}/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz")
   fi
 
   for x in "${urls[@]}"; do
@@ -108,9 +112,10 @@ function unpackage {
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zookeeper-${pkg_zookeeper_ver}.tar.gz") && echo "Unpacked zookeeper"
   [[ "$acc_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz") && echo "Unpacked accumulo"
   [[ "$hbase_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hbase-${pkg_hbase_ver}-bin.tar.gz") && echo "Unpacked hbase"
+  [[ "$zeppelin_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz") && echo "Unpacked zeppelin"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz") && echo "Unpacked hadoop"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz") && echo "Unpacked kafka"
-  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-without-hadoop.tgz") && echo "Unpacked spark"
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz") && echo "Unpacked spark"
 }
 
 function configure {
@@ -139,6 +144,11 @@ function configure {
     echo "${CL_HOSTNAME}" > ${HBASE_HOME}/conf/regionservers
   fi
 
+  # Zeppelin configuration
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    echo "[WARNING]  Zeppelin configuration is only template-based for now!"
+  fi
+
   # hadoop slaves file
   echo "${CL_HOSTNAME}" > ${CLOUD_HOME}/tmp/staging/hadoop/slaves
 
@@ -153,6 +163,7 @@ function configure {
   [[ "$acc_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/accumulo/* ${ACCUMULO_HOME}/conf/
   [[ "$geomesa_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/pkg/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar ${ACCUMULO_HOME}/lib/ext/
   [[ "$hbase_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/hbase/* ${HBASE_HOME}/conf/
+  [[ "$zeppelin_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/zeppelin/* ${ZEPPELIN_HOME}/conf/
 
   # If Spark doesn't have log4j settings, use the Spark defaults
   test -f $SPARK_HOME/conf/log4j.properties || cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
@@ -165,7 +176,7 @@ function configure {
 
 function start_first_time {
   # This seems redundant to config but this is the first time in normal sequence where it will set properly
-  export SPARK_DIST_CLASSPATH=$(hadoop classpath)
+  [[ "$pkg_spark_hadoop_ver" = "without-hadoop" ]] && export SPARK_DIST_CLASSPATH=$(hadoop classpath)
   # check ports
   check_ports
 
@@ -219,14 +230,22 @@ function start_first_time {
     ${HBASE_HOME}/bin/start-hbase.sh
   fi
 
-  # init GeoServer Support
-  mkdir -p "${GEOSERVER_DATA_DIR}"
-  mkdir "${GEOSERVER_PID_DIR}"
-  mkdir "${GEOSERVER_LOG_DIR}"
-  touch "${GEOSERVER_PID_DIR}/geoserver.pid"
-  touch "${GEOSERVER_LOG_DIR}/std.out"
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    # start zeppelin
+    echo "Starting zeppelin..."
+    ${ZEPPELIN_HOME}/bin/zeppelin-daemon.sh start
+  fi
 
-  start_geoserver
+  if [[ "$geoserver_enable" -eq 1 ]]; then
+    echo "Initializing geoserver..."
+    mkdir -p "${GEOSERVER_DATA_DIR}"
+    mkdir "${GEOSERVER_PID_DIR}"
+    mkdir "${GEOSERVER_LOG_DIR}"
+    touch "${GEOSERVER_PID_DIR}/geoserver.pid"
+    touch "${GEOSERVER_LOG_DIR}/std.out"
+    start_geoserver
+  fi
+
 }
 
 function start_cloud {
@@ -263,7 +282,17 @@ function start_cloud {
     ${HBASE_HOME}/bin/start-hbase.sh
   fi
 
-  start_geoserver
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    # start zeppelin
+    echo "Starting zeppelin..."
+    ${ZEPPELIN_HOME}/bin/zeppelin-daemon.sh start
+  fi
+
+  if [[ "$geoserver_enable" -eq 1 ]]; then
+    echo "Starting geoserver..."
+    start_geoserver
+  fi
+
 }
 
 function start_yarn {
@@ -272,19 +301,21 @@ function start_yarn {
 }
 
 function start_geoserver {
-  if [[ "${geoserver_enabled}" -eq "1" ]]; then
-    echo "Starting GeoServer..."
-    (${GEOSERVER_HOME}/bin/startup.sh &> ${GEOSERVER_LOG_DIR}/std.out) &
-    GEOSERVER_PID=$!
-    echo "${GEOSERVER_PID}" > ${GEOSERVER_PID_DIR}/geoserver.pid
-    echo "GeoServer Process Started"
-    echo "PID: ${GEOSERVER_PID}"
-    echo "GeoServer Out: ${GEOSERVER_LOG_DIR}/std.out"
-  fi
+  (${GEOSERVER_HOME}/bin/startup.sh &> ${GEOSERVER_LOG_DIR}/std.out) &
+  GEOSERVER_PID=$!
+  echo "${GEOSERVER_PID}" > ${GEOSERVER_PID_DIR}/geoserver.pid
+  echo "GeoServer Process Started"
+  echo "PID: ${GEOSERVER_PID}"
+  echo "GeoServer Out: ${GEOSERVER_LOG_DIR}/std.out"
 }
 
 function stop_cloud {
   verify_stop
+
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    echo "Stopping zeppelin..."
+    ${ZEPPELIN_HOME}/bin/zeppelin-daemon.sh stop
+  fi
 
   echo "Stopping kafka..."
   $KAFKA_HOME/bin/kafka-server-stop.sh
@@ -308,7 +339,11 @@ function stop_cloud {
   echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 
-  stop_geoserver
+  if [[ "${geoserver_enabled}" -eq "1" ]]; then
+    echo "Stopping geoserver..."
+    stop_geoserver
+  fi
+
 }
 
 function psaux {
@@ -317,6 +352,7 @@ function psaux {
 
 function verify_stop {
   # Find Processes
+  local zeppelin=`psaux "[z]eppelin"`
   local kafka=`psaux "[k]afka"`
   local accumulo=`psaux "[a]ccumulo"`
   local hbase=`psaux "[h]base"`
@@ -325,9 +361,13 @@ function verify_stop {
   local hadoop=`psaux "[h]adoop"`
   local geoserver=`psaux "[g]eoserver"`
 
-  local res="$kafka$accumulo$hbase$yarn$zookeeper$geoserver"
+  local res="$zeppelin$kafka$accumulo$hbase$yarn$zookeeper$geoserver"
   if [[ -n "${res}" ]]; then
     echo "The following services do not appear to be shutdown:"
+    if [[ -n "${zeppelin}" ]]; then
+      echo "${NL}Zeppelin"
+      psaux "[z]eppelin"
+    fi
     if [[ -n "${kafka}" ]]; then
       echo "${NL}Kafka"
       psaux "[k]afka"
@@ -372,26 +412,24 @@ function stop_yarn {
 }
 
 function stop_geoserver {
-  if [[ "${geoserver_enabled}" -eq "1" ]]; then
-    echo "Stopping GeoServer..."
-    GEOSERVER_PID=`cat ${GEOSERVER_PID_DIR}/geoserver.pid`
-    if [[ -n "${GEOSERVER_PID}" ]]; then
-      kill -15 ${GEOSERVER_PID}
-      echo "TERM signal sent to process PID: ${GEOSERVER_PID}"
-    else
-      echo "No GeoServer PID was saved. This script must be used to start GeoServer in order for this script to be able to stop it."
-    fi
+  GEOSERVER_PID=`cat ${GEOSERVER_PID_DIR}/geoserver.pid`
+  if [[ -n "${GEOSERVER_PID}" ]]; then
+    kill -15 ${GEOSERVER_PID}
+    echo "TERM signal sent to process PID: ${GEOSERVER_PID}"
+  else
+    echo "No GeoServer PID was saved. This script must be used to start GeoServer in order for this script to be able to stop it."
   fi
 }
 
 function clear_sw {
+  [[ "$zeppelin_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/zeppelin-${pkg_zeppelin_ver}"
   [[ "$acc_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}"
   [[ "$hbase_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
   [[ -d "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"  ]] && rm -rf "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"
   rm -rf "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}"
   rm -rf "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
   rm -rf "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
-  rm -rf "${CLOUD_HOME}/spark-${pkg_spark_ver}-bin-without-hadoop"
+  rm -rf "${CLOUD_HOME}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}"
   rm -rf "${CLOUD_HOME}/scala-${pkg_scala_ver}"
   rm -rf "${CLOUD_HOME}/tmp"
   if [[ -a "${CLOUD_HOME}/zookeeper.out" ]]; then rm "${CLOUD_HOME}/zookeeper.out"; fi #hahahaha
@@ -418,7 +456,7 @@ function show_help {
   echo "If the environment variable GEOSERVER_HOME is set then the parameter '-gs' may be used with 'start' to automatically start/stop GeoServer with the cloud."
 }
 
-if [[ "$2" -eq "-gs" ]]; then
+if [[ "$2" == "-gs" ]]; then
   if [[ -n "${GEOSERVER_HOME}" && -e $GEOSERVER_HOME/bin/startup.sh ]]; then
       geoserver_enabled=1
   else
