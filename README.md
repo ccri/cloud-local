@@ -32,6 +32,7 @@ This init script does several things:
 * initialize accumulo/hbase
 * start up zookeeper, hadoop, and accumulo/hbase
 * start kafka broker
+* install and start Zeppelin
 * install GeoMesa Accumulo iterators
 * install GeoMesa command-line tools
 
@@ -53,6 +54,7 @@ After installing it you should be able to reach your standard cloud urls:
 * Accumulo:    http://localhost:50095
 * Hadoop DFS:  http://localhost:50070
 * Job Tracker: http://localhost:8088
+* Zeppelin:    http://localhost:5771
 
 ## Getting Help
 
@@ -95,7 +97,7 @@ Port offseting moves the entire port space by a given numerical amount in order 
 
 WARNING - you should stop and clean cloud-local before changing any of these parameters since they will modify the config and may prevent cloud-local from cleanly shutting down. Changing port offsets is supported by XML comments in the accumulo and hadoop config files. Removing or changing these comments (CL_port_default) will likely cause failures.
 
-## GoeServer
+## GeoServer
 
 If you have the environment variable GEOSERVER_HOME set you can use this parameter to start GeoServer at the same time but running in a child thread.
 
@@ -111,6 +113,32 @@ Additionally, if you need to restart GeoServer you may use the command `regeoser
     
 The GeoServer PID is stored in `$CLOUD_HOME/data/geoserver/pid/geoserver.pid` and GeoServer's stdout is redirected to `$CLOUD_HOME/data/geoserver/log/std.out`.
 
+<<<<<<< HEAD
+=======
+## Zeppelin
+
+Zeppelin is *disabled* by default.
+
+Currently, we are using the Zeppelin distribution that includes all of the interpreters, and
+it is configured to run against Spark only in local mode.  If you want to connect to another
+(real) cloud, you will have to configure that manually; see:
+
+[Zeppelin documentation](http://zeppelin.apache.org/docs/0.7.0/install/spark_cluster_mode.html#spark-on-yarn-mode)
+
+### GeoMesa Spark-SQL on Zeppelin
+
+To enable GeoMesa's Spark-SQL within Zeppelin:
+
+1.  point your browser to your [local Zeppelin interpreter configuration](http://localhost:5771/#/interpreter)
+1.  scroll to the bottom where the *Spark* interpreter configuration appears
+1.  click on the "edit" button next to the interpreter name (on the right-hand side of the UI)
+1.  within the _Dependencies_ section, add this one JAR (either as a full, local file name or as Maven GAV coordinates):
+    1.  geomesa-accumulo-spark-runtime_2.11-1.3.0.jar
+1.  when prompted by the pop-up, click to restart the Spark intepreter
+
+That's it!  There is no need to restart any of the cloud-local services.
+
+>>>>>>> upstream/master
 ## Maintenance
 
 The `cloud-local.sh` script provides options for maintenance. Best to stop the cloud before performing any of these tasks. Pass in the parameter `clean` to remove software (but not the tar.gz's) and data. The parameter `reconfigure` will first `clean` then `init`.

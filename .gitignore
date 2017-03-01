@@ -5,10 +5,14 @@ data/*
 /accumulo*
 /hadoop*
 /zookeeper*
+/zeppelin*
+derby*
+/metastore_db*
 /kafka*
 /spark*
 /scala*
 /geomesa*
+/scala*
 /.idea
 /cloud-local.iml
 *.iml
