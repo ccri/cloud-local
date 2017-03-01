@@ -310,6 +310,7 @@ function start_geoserver {
 }
 
 function stop_cloud {
+  verify_stop
 
   if [[ "$zeppelin_enabled" -eq 1 ]]; then
     echo "Stopping zeppelin..."
@@ -343,7 +344,6 @@ function stop_cloud {
     stop_geoserver
   fi
 
-  verify_stop
 }
 
 function psaux {
