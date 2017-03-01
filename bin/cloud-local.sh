@@ -236,14 +236,16 @@ function start_first_time {
     ${ZEPPELIN_HOME}/bin/zeppelin-daemon.sh start
   fi
 
-  # init GeoServer Support
-  mkdir -p "${GEOSERVER_DATA_DIR}"
-  mkdir "${GEOSERVER_PID_DIR}"
-  mkdir "${GEOSERVER_LOG_DIR}"
-  touch "${GEOSERVER_PID_DIR}/geoserver.pid"
-  touch "${GEOSERVER_LOG_DIR}/std.out"
+  if [[ "$geoserver_enable" -eq 1 ]]; then
+    echo "Initializing geoserver..."
+    mkdir -p "${GEOSERVER_DATA_DIR}"
+    mkdir "${GEOSERVER_PID_DIR}"
+    mkdir "${GEOSERVER_LOG_DIR}"
+    touch "${GEOSERVER_PID_DIR}/geoserver.pid"
+    touch "${GEOSERVER_LOG_DIR}/std.out"
+    start_geoserver
+  fi
 
-  start_geoserver
 }
 
 function start_cloud {
@@ -286,7 +288,11 @@ function start_cloud {
     ${ZEPPELIN_HOME}/bin/zeppelin-daemon.sh start
   fi
 
-  start_geoserver
+  if [[ "$geoserver_enable" -eq 1 ]]; then
+    echo "Starting geoserver..."
+    start_geoserver
+  fi
+
 }
 
 function start_yarn {
@@ -295,15 +301,12 @@ function start_yarn {
 }
 
 function start_geoserver {
-  if [[ "${geoserver_enabled}" -eq "1" ]]; then
-    echo "Starting GeoServer..."
-    (${GEOSERVER_HOME}/bin/startup.sh &> ${GEOSERVER_LOG_DIR}/std.out) &
-    GEOSERVER_PID=$!
-    echo "${GEOSERVER_PID}" > ${GEOSERVER_PID_DIR}/geoserver.pid
-    echo "GeoServer Process Started"
-    echo "PID: ${GEOSERVER_PID}"
-    echo "GeoServer Out: ${GEOSERVER_LOG_DIR}/std.out"
-  fi
+  (${GEOSERVER_HOME}/bin/startup.sh &> ${GEOSERVER_LOG_DIR}/std.out) &
+  GEOSERVER_PID=$!
+  echo "${GEOSERVER_PID}" > ${GEOSERVER_PID_DIR}/geoserver.pid
+  echo "GeoServer Process Started"
+  echo "PID: ${GEOSERVER_PID}"
+  echo "GeoServer Out: ${GEOSERVER_LOG_DIR}/std.out"
 }
 
 function stop_cloud {
@@ -335,7 +338,10 @@ function stop_cloud {
   echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 
-  stop_geoserver
+  if [[ "${geoserver_enabled}" -eq "1" ]]; then
+    echo "Stopping geoserver..."
+    stop_geoserver
+  fi
 
   verify_stop
 }
@@ -406,15 +412,12 @@ function stop_yarn {
 }
 
 function stop_geoserver {
-  if [[ "${geoserver_enabled}" -eq "1" ]]; then
-    echo "Stopping GeoServer..."
-    GEOSERVER_PID=`cat ${GEOSERVER_PID_DIR}/geoserver.pid`
-    if [[ -n "${GEOSERVER_PID}" ]]; then
-      kill -15 ${GEOSERVER_PID}
-      echo "TERM signal sent to process PID: ${GEOSERVER_PID}"
-    else
-      echo "No GeoServer PID was saved. This script must be used to start GeoServer in order for this script to be able to stop it."
-    fi
+  GEOSERVER_PID=`cat ${GEOSERVER_PID_DIR}/geoserver.pid`
+  if [[ -n "${GEOSERVER_PID}" ]]; then
+    kill -15 ${GEOSERVER_PID}
+    echo "TERM signal sent to process PID: ${GEOSERVER_PID}"
+  else
+    echo "No GeoServer PID was saved. This script must be used to start GeoServer in order for this script to be able to stop it."
   fi
 }
 
@@ -453,7 +456,7 @@ function show_help {
   echo "If the environment variable GEOSERVER_HOME is set then the parameter '-gs' may be used with 'start' to automatically start/stop GeoServer with the cloud."
 }
 
-if [[ "$2" -eq "-gs" ]]; then
+if [[ "$2" == "-gs" ]]; then
   if [[ -n "${GEOSERVER_HOME}" && -e $GEOSERVER_HOME/bin/startup.sh ]]; then
       geoserver_enabled=1
   else
