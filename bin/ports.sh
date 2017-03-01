@@ -65,6 +65,9 @@ function check_ports {
   # spark
   check_port 4040 # Spark job monitor
 
+  # Zeppelin
+  check_port 5771 # Zeppelin embedded web server
+
   echo "Known ports are OK (using offset $(get_port_offset))"
 }
 
@@ -83,6 +86,10 @@ function configure_port_offset {
   kafkaPort=$((9092+offset))
   sed -i~orig "s/\/\/$CL_HOSTNAME:[0-9].*/\/\/$CL_HOSTNAME:$kafkaPort/" $KAFKA_HOME/config/server.properties
   sed -i~orig "s/zookeeper.connect=$CL_HOSTNAME:[0-9].*/zookeeper.connect=$CL_HOSTNAME:$zkPort/" $KAFKA_HOME/config/server.properties
+
+  # Zeppelin
+  zeppelinPort=$((5771+offset))
+  sed -i~orig "s/ZEPPELIN_PORT=[0-9]\{1,5\}\(.*\)/ZEPPELIN_PORT=$zeppelinPort\1/g" "$ZEPPELIN_HOME/conf/zeppelin-env.sh"
 
   # hadoop and accumulo xml files
   # The idea with this block is that the xml files have comments which tag lines which need
