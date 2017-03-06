@@ -88,8 +88,10 @@ function configure_port_offset {
   sed -i~orig "s/zookeeper.connect=$CL_HOSTNAME:[0-9].*/zookeeper.connect=$CL_HOSTNAME:$zkPort/" $KAFKA_HOME/config/server.properties
 
   # Zeppelin
-  zeppelinPort=$((5771+offset))
-  sed -i~orig "s/ZEPPELIN_PORT=[0-9]\{1,5\}\(.*\)/ZEPPELIN_PORT=$zeppelinPort\1/g" "$ZEPPELIN_HOME/conf/zeppelin-env.sh"
+  if [[ "$zeppelin_enabled" -eq 1 ]]; then
+    zeppelinPort=$((5771+offset))
+    sed -i~orig "s/ZEPPELIN_PORT=[0-9]\{1,5\}\(.*\)/ZEPPELIN_PORT=$zeppelinPort\1/g" "$ZEPPELIN_HOME/conf/zeppelin-env.sh"
+  fi
 
   # hadoop and accumulo xml files
   # The idea with this block is that the xml files have comments which tag lines which need
