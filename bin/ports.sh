@@ -19,7 +19,7 @@ function get_port_offset {
 function check_port {
   local port=$1
   local offset=$(get_port_offset)
-  local tocheck=$((origport+offset))
+  local tocheck=$((port+offset))
   if (: < /dev/tcp/127.0.0.1/${tocheck}) 2>/dev/null; then
     echo "Error: port ${tocheck} is already taken (orig port ${port} with offset ${offset})"
     exit 1
