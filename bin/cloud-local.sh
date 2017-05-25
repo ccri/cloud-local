@@ -496,7 +496,7 @@ elif [[ $1 == 'regeoserver' ]]; then
   stop_geoserver
   start_geoserver
 elif [[ $1 == 'restart' ]]; then
-  stop_cloud && stop_geoserver && start_cloud && start_geoserver
+  stop_geoserver && stop_cloud && start_cloud && start_geoserver
 else
   show_help
 fi
