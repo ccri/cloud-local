@@ -452,7 +452,7 @@ function clear_data {
 }
 
 function show_help {
-  echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|regeoserver|clean|help)"
+  echo "Provide 1 command: (init|start|stop|reconfigure|restart|reyarn|regeoserver|clean|help)"
   echo "If the environment variable GEOSERVER_HOME is set then the parameter '-gs' may be used with 'start' to automatically start/stop GeoServer with the cloud."
 }
 

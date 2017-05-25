@@ -99,6 +99,10 @@ function set_env_vars {
 
   # This variable requires Hadoop executable, which will fail during certain runs/steps
   [[ "$pkg_spark_hadoop_ver" = "without-hadoop" ]] && export SPARK_DIST_CLASSPATH=$(hadoop classpath 2>/dev/null)
+
+  # Export direnv environment file https://direnv.net/
+  env | grep -v PATH | sort > $CLOUD_HOME/.envrc
+  echo "PATH=${PATH}" >> $CLOUD_HOME/.envrc
 }
 
 if [[ -z "$JAVA_HOME" ]];then
