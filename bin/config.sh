@@ -38,7 +38,7 @@ function validate_config {
   if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][67][.]. ]]; then
     pkg_error="${pkg_error}Invalid accumulo version: '${pkg_accumulo_ver}' ${NL}"
   fi
-  if [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ 0[.]9[.].+ ]]; then
+  if [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ 0[.][9|10][.].+ ]]; then
     pkg_error="${pkg_error}Invalid kafka version: '${pkg_kafka_ver}' ${NL}"
   fi
   if [[ -z "$pkg_geomesa_scala_ver" && $pkg_geomesa_ver =~ 1[.]3[.].+ ]]; then
@@ -104,6 +104,11 @@ function set_env_vars {
 if [[ -z "$JAVA_HOME" ]];then
   echo "ERROR: must set JAVA_HOME..."
   return 1
+fi
+
+if [[ ! -f "$JAVA_HOME/bin/jps" ]];then
+  echo "jps doesn't exist..."
+  exit 1
 fi
 
 # load configuration scripts

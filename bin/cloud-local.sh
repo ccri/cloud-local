@@ -160,6 +160,16 @@ function configure {
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
   cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
+
+#Old way of getting Kafka server PID is:
+#PIDS=$(ps ax | grep -i 'kafka\.Kafka' | grep java | grep -v grep | awk '{print $1}')
+#It doesn't work with Kafka 0.10.0.1. The reason is that the command of starting
+#Kafka server is too long (large than system limit 4096 bytes) and /proc/PID/cmdline is
+#truncated. So "ps ax" output doesn't include main class name "kafka.Kafka".
+if [[ -f "${KAFKA_HOME}/bin/kafka-server-stop.sh" ]];then
+  sed -i~orig "/PIDS=/s#.*#PIDS=\$(jps -l | grep -i 'kafka\.Kafka' | awk '{print \$1}')#" "${KAFKA_HOME}/bin/kafka-server-stop.sh"
+fi
+
   [[ "$acc_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/accumulo/* ${ACCUMULO_HOME}/conf/
   [[ "$geomesa_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/pkg/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar ${ACCUMULO_HOME}/lib/ext/
   [[ "$hbase_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/hbase/* ${HBASE_HOME}/conf/
