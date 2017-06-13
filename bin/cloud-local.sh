@@ -461,6 +461,62 @@ function clear_data {
   fi
 }
 
+function clear_stream_data {
+    rm -rf ${CLOUD_HOME}/data/zookeeper/*
+    if [[ -d "${CLOUD_HOME}/data/kafka-logs" ]]; then rm -rf ${CLOUD_HOME}/data/kafka-logs; fi
+}
+
+function check_stream_ports {
+  check_port 2181 # zookeeper
+
+  check_port 9092 # kafka broker
+}
+
+function verify_stream_stop {
+  # Find Processes
+  local kafka=`psaux "[k]afka"`
+  local zookeeper=`psaux "[z]ookeeper"`
+
+  local res="$kafka$zookeeper"
+  echo "res=$res"
+  if [[ -n "${res}" ]]; then
+    echo "The following services do not appear to be shutdown:"
+    if [[ -n "${kafka}" ]]; then
+      echo "${NL}Kafka"
+      psaux "[k]afka"
+    fi
+    if [[ -n "${zookeeper}" ]]; then
+      echo "${NL}Zookeeper"
+      psaux "[z]ookeeper"
+    fi
+    exit 1
+  fi
+
+}
+
+function start_stream {
+  #Check is zookeeper and kafka are still running
+  verify_stream_stop
+
+  # Check zookeeper and kafka ports
+  check_stream_ports
+
+  # start zk
+  echo "Starting zoo..."
+  (cd $CLOUD_HOME ; zkServer.sh start)
+
+  echo "Starting kafka..."
+  $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+}
+
+function stop_stream {
+  echo "Stopping kafka..."
+  $KAFKA_HOME/bin/kafka-server-stop.sh
+
+  echo "Stopping zookeeper..."
+  $ZOOKEEPER_HOME/bin/zkServer.sh stop
+}
+
 function show_help {
   echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|regeoserver|clean|help)"
   echo "If the environment variable GEOSERVER_HOME is set then the parameter '-gs' may be used with 'start' to automatically start/stop GeoServer with the cloud."
@@ -505,6 +561,14 @@ elif [[ $1 == 'reyarn' ]]; then
 elif [[ $1 == 'regeoserver' ]]; then
   stop_geoserver
   start_geoserver
+elif [[ $1 == 'setup' ]]; then
+  unpackage && configure
+elif [[ $1 == 'cleanStream' ]]; then
+  clear_stream_data
+elif [[ $1 == 'startStream' ]]; then
+  start_stream
+elif [[ $1 == 'stopStream' ]]; then
+  stop_stream
 else
   show_help
 fi
