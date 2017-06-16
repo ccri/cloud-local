@@ -35,7 +35,7 @@ function validate_config {
   if [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.][56789] ]]; then
     pkg_error="${pkg_error}Invalid zookeeper version: '${pkg_zookeeper_ver}' ${NL}"
   fi
-  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][67][.]. ]]; then
+  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][678][.]. ]]; then
     pkg_error="${pkg_error}Invalid accumulo version: '${pkg_accumulo_ver}' ${NL}"
   fi
   if [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ 0[.]9[.].+ ]]; then
