@@ -68,8 +68,12 @@ function download_packages {
 
   declare -a urls=("${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
                    "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
-                   "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz"
                    "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz")
+
+  
+  if [[ "$kafka_enabled" -eq 1 ]]; then
+    urls=("${urls[@]}" "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
+  fi
 
   if [[ "$acc_enabled" -eq 1 ]]; then
     urls=("${urls[@]}" "${maven}/org/apache/accumulo/accumulo/${pkg_accumulo_ver}/accumulo-${pkg_accumulo_ver}-bin.tar.gz")
@@ -114,7 +118,7 @@ function unpackage {
   [[ "$hbase_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hbase-${pkg_hbase_ver}-bin.tar.gz") && echo "Unpacked hbase"
   [[ "$zeppelin_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz") && echo "Unpacked zeppelin"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz") && echo "Unpacked hadoop"
-  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz") && echo "Unpacked kafka"
+  [[ "$kafka_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz") && echo "Unpacked kafka"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz") && echo "Unpacked spark"
 }
 
@@ -156,10 +160,10 @@ function configure {
   echo "Deploying config from staging..."
   test -d $HADOOP_CONF_DIR ||  mkdir $HADOOP_CONF_DIR
   test -d $ZOOKEEPER_HOME/conf || mkdir $ZOOKEEPER_HOME/conf
-  test -d $KAFKA_HOME/config || mkdir $KAFKA_HOME/config
+  [[ "$kafka_enabled" -eq 1 ]] && (test -d $KAFKA_HOME/config || mkdir $KAFKA_HOME/config)
   cp ${CLOUD_HOME}/tmp/staging/hadoop/* $HADOOP_CONF_DIR/
   cp ${CLOUD_HOME}/tmp/staging/zookeeper/* $ZOOKEEPER_HOME/conf/
-  cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
+  [[ "$kafka_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/kafka/* $KAFKA_HOME/config/
   [[ "$acc_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/accumulo/* ${ACCUMULO_HOME}/conf/
   [[ "$geomesa_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/pkg/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar ${ACCUMULO_HOME}/lib/ext/
   [[ "$hbase_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/hbase/* ${HBASE_HOME}/conf/
@@ -184,9 +188,11 @@ function start_first_time {
   echo "Starting zoo..."
   (cd $CLOUD_HOME; $ZOOKEEPER_HOME/bin/zkServer.sh start)
 
-  # start kafka
-  echo "Starting kafka..." 
-  $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+  if [[ "$kafka_enabled" -eq 1 ]]; then
+    # start kafka
+    echo "Starting kafka..." 
+    $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+  fi
   
   # format namenode
   echo "Formatting namenode..."
@@ -256,8 +262,10 @@ function start_cloud {
   echo "Starting zoo..."
   (cd $CLOUD_HOME ; zkServer.sh start)
 
-  echo "Starting kafka..."
-  $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+  if [[ "$kafka_enabled" -eq 1 ]]; then
+    echo "Starting kafka..."
+    $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+  fi
   
   # start hadoop
   echo "Starting hadoop..."
@@ -317,8 +325,10 @@ function stop_cloud {
     ${ZEPPELIN_HOME}/bin/zeppelin-daemon.sh stop
   fi
 
-  echo "Stopping kafka..."
-  $KAFKA_HOME/bin/kafka-server-stop.sh
+  if [[ "$kafka_enabled" -eq 1 ]]; then
+    echo "Stopping kafka..."
+    $KAFKA_HOME/bin/kafka-server-stop.sh
+  fi
 
   if [[ "$acc_enabled" -eq 1 ]]; then
     echo "Stopping accumulo..."
@@ -428,7 +438,7 @@ function clear_sw {
   [[ -d "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"  ]] && rm -rf "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"
   rm -rf "${CLOUD_HOME}/hadoop-${pkg_hadoop_ver}"
   rm -rf "${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
-  rm -rf "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
+  [[ "$kafka_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}"
   rm -rf "${CLOUD_HOME}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}"
   rm -rf "${CLOUD_HOME}/scala-${pkg_scala_ver}"
   rm -rf "${CLOUD_HOME}/tmp"

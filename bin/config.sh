@@ -68,7 +68,9 @@ function set_env_vars {
 
   export ZOOKEEPER_HOME="${CLOUD_HOME}/zookeeper-${pkg_zookeeper_ver}"
 
-  export KAFKA_HOME="${CLOUD_HOME}/kafka_2.11-${pkg_kafka_ver}"
+  if [[ $kafka_enabled -eq "1" ]]; then
+    export KAFKA_HOME="${CLOUD_HOME}/kafka_2.11-${pkg_kafka_ver}"
+  fi
   
   export HADOOP_HOME="$CLOUD_HOME/hadoop-${pkg_hadoop_ver}"
   export HADOOP_PREFIX="${HADOOP_HOME}"
