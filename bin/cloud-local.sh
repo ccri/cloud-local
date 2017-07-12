@@ -462,7 +462,7 @@ function clear_data {
 }
 
 function show_help {
-  echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|regeoserver|clean|help)"
+  echo "Provide 1 command: (init|start|stop|reconfigure|reyarn|regeoserver|clean|download_only|init_skip_download|help)"
   echo "If the environment variable GEOSERVER_HOME is set then the parameter '-gs' may be used with 'start' to automatically start/stop GeoServer with the cloud."
 }
 
@@ -505,6 +505,10 @@ elif [[ $1 == 'reyarn' ]]; then
 elif [[ $1 == 'regeoserver' ]]; then
   stop_geoserver
   start_geoserver
+elif [[ $1 == 'download_only' ]]; then
+  download_packages
+elif [[ $1 == 'init_skip_download' ]]; then
+  unpackage && configure && start_first_time
 else
   show_help
 fi
