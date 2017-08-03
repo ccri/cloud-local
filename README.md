@@ -21,7 +21,7 @@ When using this the first time...
     cd cloud-local
     bin/cloud-local.sh init
 
-Accumulo is the default bigtable instance...edit `conf/cloud-local.conf` to disable accumulo and enable hbase
+By default only HDFS is started. Edit `conf/cloud-local.conf` to enable Accumulo, BHase, Kafka, GeoMesa, Spark and/or Zeppelin.
 
 Cloud local sets a default accumulo instance name of "local" and password of "secret" which can be modified by editing the `conf/cloud-local.conf` file. If you want to change this you'll need to stop, clean, and reconfigure.
 
