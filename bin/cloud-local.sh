@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+REPO_BASE=https://repo.locationtech.org/content/repositories/geomesa-releases
 # thanks accumulo for these resolutions snippets
 # Start: Resolve Script Directory
 SOURCE="${BASH_SOURCE[0]}"
@@ -39,11 +40,11 @@ function download_packages {
   # GeoMesa
   if [[ "${geomesa_enabled}" -eq "1" ]]; then
     gm="geomesa-accumulo-dist_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}-bin.tar.gz"
-    url="http://art.ccri.com:8081/artifactory/libs-release-local/org/locationtech/geomesa/geomesa-accumulo-dist_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
+    url="${REPO_BASE}/org/locationtech/geomesa/geomesa-accumulo-dist_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
     wget -c -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
       || { rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"; };
     gm="geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar"
-    url="http://art.ccri.com:8081/artifactory/libs-release-local/org/locationtech/geomesa/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
+    url="${REPO_BASE}/org/locationtech/geomesa/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
     wget -c -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
       || { rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"; };
   fi
