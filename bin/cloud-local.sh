@@ -71,9 +71,9 @@ function download_packages {
   if [[ -z ${pkg_src_mirror+x} ]]; then
     # If we are using a proxy we should try to always use the same mirror
     if [[ ! -z ${http_proxy+x} ]]; then
-      local mirror=$(curl 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g'|grep -v ftp: |grep .edu/ |sort |head -1)
+      local mirror=$(curl -s 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g'|grep -v ftp: |grep .edu/ |sort |head -1)
     else
-      local mirror=$(curl 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g' | head -1)
+      local mirror=$(curl -s 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g' | head -1)
   fi
   else
     local mirror=${pkg_src_mirror}
