@@ -11,6 +11,10 @@ Cloud Local can be used to run single node versions of the following software:
 * Kafka
 * GeoMesa
 
+## Initial Configuration
+
+A proxy server can be configured by using the standard `http_proxy` env var or the cloud-local specific `cl_http_proxy` env var. The cloud local specific variable takes precedence.
+
 ## Getting Started 
 
 To prepare for the first run of cloud-local, you may need to `unset` environment variables `HADOOP_HOME`, `ACCUMULO_HOME`, `ZOOKEEPER_HOME`, `HBASE_HOME`, and others. If `env |grep -i hadoop` comes back empty, you should be good to go. You should also `kill` any instances of zookeeper or hadoop running locally. Find them with `jps -lV`.

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 REPO_BASE=https://repo.locationtech.org/content/repositories/geomesa-releases
+
 # thanks accumulo for these resolutions snippets
 # Start: Resolve Script Directory
 SOURCE="${BASH_SOURCE[0]}"
@@ -36,6 +37,15 @@ function download_packages {
   # get stuff
   echo "Downloading packages from internet..."
   test -d ${CLOUD_HOME}/pkg || mkdir ${CLOUD_HOME}/pkg
+
+  # check for proxy
+  if [[ ! -z ${cl_http_proxy+x} ]]; then
+    export http_proxy="${cl_http_proxy}"
+  fi
+
+  if [[ ! -z ${http_proxy+x} ]]; then
+    echo "Using proxy ${http_proxy}"
+  fi
   
   # GeoMesa
   if [[ "${geomesa_enabled}" -eq "1" ]]; then
