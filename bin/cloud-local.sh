@@ -46,7 +46,7 @@ function download_packages {
   if [[ ! -z ${http_proxy+x} ]]; then
     echo "Using proxy ${http_proxy}"
   fi
-  
+
   # GeoMesa
   if [[ "${geomesa_enabled}" -eq "1" ]]; then
     gm="geomesa-accumulo-dist_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}-bin.tar.gz"
@@ -69,7 +69,12 @@ function download_packages {
 
   local mirror
   if [[ -z ${pkg_src_mirror+x} ]]; then
-    local mirror=$(curl 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g' | head -1)
+    # If we are using a proxy we should try to always use the same mirror
+    if [[ ! -z ${http_proxy+x} ]]; then
+      local mirror=$(curl 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g'|grep -v ftp: |grep .edu/ |sort |head -1)
+    else
+      local mirror=$(curl 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g' | head -1)
+  fi
   else
     local mirror=${pkg_src_mirror}
   fi
