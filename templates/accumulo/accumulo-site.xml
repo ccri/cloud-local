@@ -53,6 +53,16 @@
   </property>
 
   <property>
+    <name>master.replication.coordinator.port</name>
+    <value>10001</value> <!-- CL_port_default 10001 -->
+  </property>
+
+  <property>
+    <name>replication.receipt.service.port</name>
+    <value>10002</value> <!-- CL_port_default 10002 -->
+  </property>
+
+  <property>
     <name>trace.port.client</name>
     <value>12234</value> <!-- CL_port_default 12234 -->
   </property>
