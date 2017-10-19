@@ -34,6 +34,18 @@ fi
 . "${bin}"/ports.sh
 
 function download_packages {
+  # Is the pre-download packages variable set?
+  if [[ ! -z ${pkg_pre_download+x} ]]; then
+    # Does that folder actually exist?
+    if [[ -d ${pkg_pre_download} ]] ; then
+      test -d ${CLOUD_HOME}/pkg || rmdir ${CLOUD_HOME}/pkg
+      test -h ${CLOUD_HOME}/pkg && rm ${CLOUD_HOME}/pkg
+      ln -s ${pkg_pre_download} ${CLOUD_HOME}/pkg
+      echo "Skipping downloads... using ${pkg_pre_download}"
+      return 0
+    fi
+  fi
+
   # get stuff
   echo "Downloading packages from internet..."
   test -d ${CLOUD_HOME}/pkg || mkdir ${CLOUD_HOME}/pkg
