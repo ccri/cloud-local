@@ -53,14 +53,27 @@ function check_ports {
   check_port 8090  # yarn
   check_port 8040  # yarn
   check_port 8042  # yarn
-  
+
+  check_port 13562 # mapreduce shuffle 
+
   # accumulo
-  check_port 50095 # accumulo monitor
-  check_port 4560  # accumulo monitor
+  check_port 9995  # accumulo monitor
+  check_port 4560  # accumulo monitor log4j
   check_port 9997  # accumulo tserver
-  check_port 50091 # accumulo gc
+  check_port 9998  # accumulo gc
   check_port 9999  # accumulo master
   check_port 12234 # accumulo tracer
+  check_port 10001 # accumulo master replication coordinator
+  check_port 10002 # accumulo master replication service
+
+
+  # hbase
+  check_port 16000 # hbase master
+  check_port 16010 # hbase master info
+  check_port 16020 # hbase regionserver
+  check_port 16030 # hbase regionserver info
+  check_port 16040 # hbase rest
+  check_port 16100 # hbase multicast  
 
   # spark
   check_port 4040 # Spark job monitor
@@ -106,14 +119,15 @@ function configure_port_offset {
               $HADOOP_CONF_DIR/hdfs-site.xml \
               $HADOOP_CONF_DIR/mapred-site.xml \
               $HADOOP_CONF_DIR/yarn-site.xml; do
-    while [ -n "$(grep $KEY $FILE)" ]; do # while lines need to be changed
+    while [[ -n "$(grep $KEY $FILE)" ]]; do # while lines need to be changed
         # pull the default port out of the comment
         basePort=$(grep -hoE "$KEY [0-9]+" $FILE | head -1 | grep -hoE [0-9]+)
         # calculate new port
         newPort=$(($basePort+$offset))
-        # the assumption here is that all port values are right before the '</value>' tag
+        # note that any part of the line matching the port line will be replaced...
         # the following sed only makes the replacement on a single line, containing the matched comment
-        sed -i~orig ${SED_REGEXP_EXTENDED} "/$KEY $basePort/ s#[0-9]+</value>#$newPort</value>#" $FILE
+        #sed -i~orig ${SED_REGEXP_EXTENDED} "/$KEY $basePort/ s#[0-9]+</value>#$newPort</value>#" $FILE
+        sed -i~orig ${SED_REGEXP_EXTENDED} "/$KEY $basePort/ s#$basePort#$newPort#" $FILE
         # mark this line done
         sed -i~orig ${SED_REGEXP_EXTENDED} "s/$KEY $basePort/$KEY_CHANGED $basePort/" $FILE
     done

@@ -384,55 +384,55 @@ function stop_cloud {
 
 }
 
-function psaux {
-  ps aux | grep -i "$1"
+function psux {
+  ps ux | grep -i "$1"
 }
 
 function verify_stop {
   # Find Processes
-  local zeppelin=`psaux "[z]eppelin"`
-  local kafka=`psaux "[k]afka"`
-  local accumulo=`psaux "[a]ccumulo"`
-  local hbase=`psaux "[h]base"`
-  local yarn=`psaux "[y]arn"`
-  local zookeeper=`psaux "[z]ookeeper"`
-  local hadoop=`psaux "[h]adoop"`
-  local geoserver=`psaux "[g]eoserver"`
+  local zeppelin=`psux "[z]eppelin"`
+  local kafka=`psux "[k]afka"`
+  local accumulo=`psux "[a]ccumulo"`
+  local hbase=`psux "[h]base"`
+  local yarn=`psux "[y]arn"`
+  local zookeeper=`psux "[z]ookeeper"`
+  local hadoop=`psux "[h]adoop"`
+  local geoserver=`psux "[g]eoserver"`
 
   local res="$zeppelin$kafka$accumulo$hbase$yarn$zookeeper$geoserver"
   if [[ -n "${res}" ]]; then
     echo "The following services do not appear to be shutdown:"
     if [[ -n "${zeppelin}" ]]; then
       echo "${NL}Zeppelin"
-      psaux "[z]eppelin"
+      psux "[z]eppelin"
     fi
     if [[ -n "${kafka}" ]]; then
       echo "${NL}Kafka"
-      psaux "[k]afka"
+      psux "[k]afka"
     fi
     if [[ -n "${accumulo}" ]]; then
       echo "${NL}Accumulo"
-      psaux "[a]ccumulo"
+      psux "[a]ccumulo"
     fi
     if [[ -n "${hbase}" ]]; then
       echo "${NL}HBase"
-      psaux "[h]base"
+      psux "[h]base"
     fi
     if [[ -n "${yarn}" ]]; then
       echo "${NL}Yarn"
-      psaux "[y]arn"
+      psux "[y]arn"
     fi
     if [[ -n "${zookeeper}" ]]; then
       echo "${NL}Zookeeper"
-      psaux "[z]ookeeper"
+      psux "[z]ookeeper"
     fi
     if [[ -n "${hadoop}" ]]; then
       echo "${NL}Hadoop"
-      psaux "[h]adoop"
+      psux "[h]adoop"
     fi
     if [[ -n "${geoserver}" ]]; then
       echo "${NL}GeoServer"
-      psaux "[g]eoserver"
+      psux "[g]eoserver"
     fi
     read -r -p "Would you like to continue? [Y/n] " confirm
     confirm=${confirm,,} #lowercasing

@@ -29,7 +29,7 @@
 
   <property>
     <name>monitor.port.client</name>
-    <value>50095</value> <!-- CL_port_default 50095 -->
+    <value>9995</value> <!-- CL_port_default 9995 -->
   </property>
 
   <property>
@@ -44,7 +44,7 @@
 
   <property>
     <name>gc.port.client</name>
-    <value>50091</value> <!-- CL_port_default 50091 -->
+    <value>9998</value> <!-- CL_port_default 9998 -->
   </property>
 
   <property>
