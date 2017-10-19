@@ -76,6 +76,6 @@
   </property>
   <property>
     <name>hbase.zookeeper.property.clientPort</name>
-    <value>2181</value>  <!-- CL_port_default 9000 -->
+    <value>2181</value>  <!-- CL_port_default 2181 -->
   </property>
 </configuration>

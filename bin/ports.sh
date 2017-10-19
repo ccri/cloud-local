@@ -114,14 +114,15 @@ function configure_port_offset {
               $HADOOP_CONF_DIR/hdfs-site.xml \
               $HADOOP_CONF_DIR/mapred-site.xml \
               $HADOOP_CONF_DIR/yarn-site.xml; do
-    while [ -n "$(grep $KEY $FILE)" ]; do # while lines need to be changed
+    while [[ -n "$(grep $KEY $FILE)" ]]; do # while lines need to be changed
         # pull the default port out of the comment
         basePort=$(grep -hoE "$KEY [0-9]+" $FILE | head -1 | grep -hoE [0-9]+)
         # calculate new port
         newPort=$(($basePort+$offset))
-        # the assumption here is that all port values are right before the '</value>' tag
+        # note that any part of the line matching the port line will be replaced...
         # the following sed only makes the replacement on a single line, containing the matched comment
-        sed -i~orig ${SED_REGEXP_EXTENDED} "/$KEY $basePort/ s#[0-9]+</value>#$newPort</value>#" $FILE
+        #sed -i~orig ${SED_REGEXP_EXTENDED} "/$KEY $basePort/ s#[0-9]+</value>#$newPort</value>#" $FILE
+        sed -i~orig ${SED_REGEXP_EXTENDED} "/$KEY $basePort/ s#$basePort#$newPort#" $FILE
         # mark this line done
         sed -i~orig ${SED_REGEXP_EXTENDED} "s/$KEY $basePort/$KEY_CHANGED $basePort/" $FILE
     done
