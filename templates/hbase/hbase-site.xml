@@ -29,4 +29,53 @@
     <name>hbase.rootdir</name>
     <value>hdfs://CLOUD_LOCAL_HOSTNAME:9000/hbase</value>  <!-- CL_port_default 9000 -->
   </property>
+
+  <!-- HBase Master config --> 
+  <property>
+    <name>hbase.master.port</name>
+    <value>16000</value>  <!-- CL_port_default 16000 -->
+  </property>
+  <property>
+    <name>hbase.master.info.port</name>
+    <value>16010</value>  <!-- CL_port_default 16010 -->
+  </property>
+  <property>
+    <name>hbase.master.info.bindAddress</name>
+    <value>0.0.0.0</value>
+  </property>
+
+  <!-- HBase RegionServer Config -->
+  <property>
+    <name>hbase.regionserver.port</name>
+    <value>16020</value>  <!-- CL_port_default 16020 -->
+  </property>
+  <property>
+    <name>hbase.regionserver.info.port</name>
+    <value>16030</value>  <!-- CL_port_default 16030 -->
+  </property>
+  <property>
+    <name>hbase.regionserver.info.bindAddress</name>
+    <value>0.0.0.0</value>
+  </property>
+  
+  <!-- HBase Rest -->
+  <property>
+    <name>hbase.rest.port</name>
+    <value>16040</value>   <!-- CL_port_default 16040 -->
+  </property>
+  
+  <!-- multicast -->
+  <property>
+    <name>hbase.status.multicast.address.port</name>
+    <value>16100</value>   <!-- CL_port_default 16100 -->
+  </property>
+  
+  <property>
+    <name>hbase.zookeeper.quorum</name>
+    <value>CLOUD_LOCAL_HOSTNAME</value> 
+  </property>
+  <property>
+    <name>hbase.zookeeper.property.clientPort</name>
+    <value>2181</value>  <!-- CL_port_default 9000 -->
+  </property>
 </configuration>

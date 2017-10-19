@@ -62,6 +62,14 @@ function check_ports {
   check_port 9999  # accumulo master
   check_port 12234 # accumulo tracer
 
+  # hbase
+  check_port 16000 # hbase master
+  check_port 16010 # hbase master info
+  check_port 16020 # hbase regionserver
+  check_port 16030 # hbase regionserver info
+  check_port 16040 # hbase rest
+  check_port 16100 # hbase multicast  
+
   # spark
   check_port 4040 # Spark job monitor
 
