@@ -53,14 +53,19 @@ function check_ports {
   check_port 8090  # yarn
   check_port 8040  # yarn
   check_port 8042  # yarn
-  
+
+  check_port 13562 # mapreduce shuffle 
+
   # accumulo
-  check_port 50095 # accumulo monitor
-  check_port 4560  # accumulo monitor
+  check_port 9995  # accumulo monitor
+  check_port 4560  # accumulo monitor log4j
   check_port 9997  # accumulo tserver
-  check_port 50091 # accumulo gc
+  check_port 9998  # accumulo gc
   check_port 9999  # accumulo master
   check_port 12234 # accumulo tracer
+  check_port 10001 # accumulo master replication coordinator
+  check_port 10002 # accumulo master replication service
+
 
   # hbase
   check_port 16000 # hbase master
