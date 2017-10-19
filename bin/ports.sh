@@ -127,7 +127,8 @@ function configure_port_offset {
         # note that any part of the line matching the port line will be replaced...
         # the following sed only makes the replacement on a single line, containing the matched comment
         #sed -i~orig ${SED_REGEXP_EXTENDED} "/$KEY $basePort/ s#[0-9]+</value>#$newPort</value>#" $FILE
-        sed -i~orig ${SED_REGEXP_EXTENDED} "/$KEY $basePort/ s#$basePort#$newPort#" $FILE
+        if [[ "${CL_VERBOSE}" == "1" ]]; then echo "Replacing port $basePort with $newPort in file $FILE"; fi
+        sed -i~orig ${SED_REGEXP_EXTENDED} "/$KEY $basePort/ s#(<value>.*)(${basePort})(.*</value>)#\\1${newPort}\\3#" $FILE
         # mark this line done
         sed -i~orig ${SED_REGEXP_EXTENDED} "s/$KEY $basePort/$KEY_CHANGED $basePort/" $FILE
     done
