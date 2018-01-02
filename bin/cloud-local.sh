@@ -38,8 +38,7 @@ function download_packages {
   if [[ ! -z ${pkg_pre_download+x} ]]; then
     # Does that folder actually exist?
     if [[ -d ${pkg_pre_download} ]] ; then
-      test -d ${CLOUD_HOME}/pkg || rmdir ${CLOUD_HOME}/pkg
-      test -h ${CLOUD_HOME}/pkg && rm ${CLOUD_HOME}/pkg
+      rm -f pkg
       ln -s ${pkg_pre_download} ${CLOUD_HOME}/pkg
       echo "Skipping downloads... using ${pkg_pre_download}"
       return 0
@@ -98,7 +97,7 @@ function download_packages {
                    "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
                    "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz")
 
-  
+
   if [[ "$kafka_enabled" -eq 1 ]]; then
     urls=("${urls[@]}" "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
   fi
@@ -119,7 +118,7 @@ function download_packages {
       fname=$(basename "$x");
       echo "fetching ${x}";
       wget -c -O "${CLOUD_HOME}/pkg/${fname}" "$x" || { rm -f "${CLOUD_HOME}/pkg/${fname}"; echo "Error Downloading: ${fname}"; errorList="${errorList} ${x} ${NL}"; };
-  done 
+  done
 
   if [[ -n "${errorList}" ]]; then
     echo "Failed to download: ${NL} ${errorList}";
