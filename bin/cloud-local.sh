@@ -38,7 +38,7 @@ function download_packages {
   if [[ ! -z ${pkg_pre_download+x} ]]; then
     # Does that folder actually exist?
     if [[ -d ${pkg_pre_download} ]] ; then
-      rm -f pkg
+      rm -f ${CLOUD_HOME}/pkg
       ln -s ${pkg_pre_download} ${CLOUD_HOME}/pkg
       echo "Skipping downloads... using ${pkg_pre_download}"
       return 0
