@@ -100,7 +100,7 @@ function download_packages {
 
   
   if [[ "$kafka_enabled" -eq 1 ]]; then
-    urls=("${urls[@]}" "${mirror}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
+    urls=("${urls[@]}" "http://archive.apache.org/dist/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
   fi
 
   if [[ "$acc_enabled" -eq 1 ]]; then
