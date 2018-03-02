@@ -79,28 +79,17 @@ function download_packages {
       || { rm -f "${file}"; echo "Error downloading: ${file}"; errorList="${errorList} scala-${pkg_scala_ver}.tgz ${NL}"; };
   fi
 
-  local mirror
-  if [[ -z ${pkg_src_mirror+x} ]]; then
-    # If we are using a proxy we should try to always use the same mirror
-    if [[ ! -z ${http_proxy+x} ]]; then
-      local mirror=$(curl -s 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g'|grep -v ftp: |grep .edu/ |sort |head -1)
-    else
-      local mirror=$(curl -s 'https://www.apache.org/dyn/closer.cgi' | grep -o '<strong>[^<]*</strong>' | sed 's/<[^>]*>//g' | head -1)
-  fi
-  else
-    local mirror=${pkg_src_mirror}
-  fi
-  echo "Using mirror ${mirror}"
+  local apache_archive_url="http://archive.apache.org/dist"
 
   local maven=${pkg_src_maven}
 
-  declare -a urls=("${mirror}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
-                   "${mirror}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
-                   "${mirror}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz")
+  declare -a urls=("${apache_archive_url}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
+                   "${apache_archive_url}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
+                   "${apache_archive_url}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz")
 
   
   if [[ "$kafka_enabled" -eq 1 ]]; then
-    urls=("${urls[@]}" "http://archive.apache.org/dist/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
+    urls=("${urls[@]}" "${apache_archive_url}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
   fi
 
   if [[ "$acc_enabled" -eq 1 ]]; then
@@ -108,11 +97,11 @@ function download_packages {
   fi
 
   if [[ "$hbase_enabled" -eq 1 ]]; then
-    urls=("${urls[@]}" "${mirror}/hbase/${pkg_hbase_ver}/hbase-${pkg_hbase_ver}-bin.tar.gz")
+    urls=("${urls[@]}" "${apache_archive_url}/hbase/${pkg_hbase_ver}/hbase-${pkg_hbase_ver}-bin.tar.gz")
   fi
 
   if [[ "$zeppelin_enabled" -eq 1 ]]; then
-    urls=("${urls[@]}" "${mirror}zeppelin/zeppelin-${pkg_zeppelin_ver}/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz")
+    urls=("${urls[@]}" "${apache_archive_url}zeppelin/zeppelin-${pkg_zeppelin_ver}/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz")
   fi
 
   for x in "${urls[@]}"; do
