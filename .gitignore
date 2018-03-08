@@ -17,3 +17,5 @@ derby*
 /.idea
 /cloud-local.iml
 *.iml
+.envrc
+

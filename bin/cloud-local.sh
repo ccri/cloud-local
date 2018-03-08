@@ -101,7 +101,7 @@ function download_packages {
   fi
 
   if [[ "$zeppelin_enabled" -eq 1 ]]; then
-    urls=("${urls[@]}" "${apache_archive_url}zeppelin/zeppelin-${pkg_zeppelin_ver}/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz")
+    urls=("${urls[@]}" "${apache_archive_url}/zeppelin/zeppelin-${pkg_zeppelin_ver}/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz")
   fi
 
   for x in "${urls[@]}"; do
