@@ -449,7 +449,7 @@ function stop_geoserver {
 }
 
 function clear_sw {
-  [[ "$zeppelin_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/zeppelin-${pkg_zeppelin_ver}"
+  [[ "$zeppelin_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/zeppelin-${pkg_zeppelin_ver}-bin-all"
   [[ "$acc_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/accumulo-${pkg_accumulo_ver}"
   [[ "$hbase_enabled" -eq 1 ]] && rm -rf "${CLOUD_HOME}/hbase-${pkg_hbase_ver}"
   [[ -d "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"  ]] && rm -rf "${CLOUD_HOME}/geomesa-accumulo_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}"
