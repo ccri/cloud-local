@@ -424,7 +424,7 @@ function verify_stop {
       psux "[g]eoserver"
     fi
     read -r -p "Would you like to continue? [Y/n] " confirm
-    confirm=${confirm,,} #lowercasing
+    confirm=$(echo $confirm | tr '[:upper:]' '[:lower:]') #lowercasing
     if [[ $confirm =~ ^(yes|y) || $confirm == "" ]]; then
       return 0
     else
@@ -464,7 +464,7 @@ function clear_sw {
 
 function clear_data {
   read -r -p "Are you sure you want to clear data directories? [y/N] " confirm
-  confirm=${confirm,,} #lowercasing
+  confirm=$(echo $confirm | tr '[:upper:]' '[:lower:]') #lowercasing
   if [[ $confirm =~ ^(yes|y) ]]; then
     rm -rf ${CLOUD_HOME}/data/yarn/*
     rm -rf ${CLOUD_HOME}/data/zookeeper/*
