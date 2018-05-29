@@ -68,17 +68,8 @@
   </property>
 
   <property>
-    <name>instance.dfs.uri</name>
-    <value>hdfs://CLOUD_LOCAL_HOSTNAME:9000</value> <!-- CL_port_default 9000 -->
-  </property>
-
-  <property>
-    <name>logger.dir.walog</name>
-    <value>walogs</value>
-    <description>The property only needs to be set if upgrading from 1.4 which used to store write-ahead logs on the local
-      filesystem. In 1.5 write-ahead logs are stored in DFS.  When 1.5 is started for the first time it will copy any 1.4
-      write ahead logs into DFS.  It is possible to specify a comma-separated list of directories.
-    </description>
+    <name>instance.volumes</name>
+    <value>hdfs://CLOUD_LOCAL_HOSTNAME:9000/accumulo</value> <!-- CL_port_default 9000 -->
   </property>
 
   <property>

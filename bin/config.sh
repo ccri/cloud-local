@@ -27,18 +27,18 @@ IFS=$'\n' complete -W "init start stop reconfigure regeoserver reyarn clean help
 NL=$'\n'
 
 function validate_config {
-  # allowed versions are hadoop 2.[567].x, zk 3.4.[56], acc 1.[67].x
+  # allowed versions are hadoop 2.[5-9].x, zk 3.4.[6-10], acc 1.[6-9].x
   local pkg_error=""
-  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.][567][.]. ]]; then
+  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.][56789][.]. ]]; then
     pkg_error="${pkg_error}Invalid hadoop version: '${pkg_hadoop_ver}' ${NL}"
   fi
   if [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.]([56789]|10) ]]; then
     pkg_error="${pkg_error}Invalid zookeeper version: '${pkg_zookeeper_ver}' ${NL}"
   fi
-  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][678][.]. ]]; then
+  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][6789][.]. ]]; then
     pkg_error="${pkg_error}Invalid accumulo version: '${pkg_accumulo_ver}' ${NL}"
   fi
-  if [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ 0[.]9[.].+ ]]; then
+  if [[ -z "$pkg_kafka_ver" || ! $pkg_kafka_ver =~ ((0[.]9[.].+)|1[.]0[.].) ]]; then
     pkg_error="${pkg_error}Invalid kafka version: '${pkg_kafka_ver}' ${NL}"
   fi
   if [[ -z "$pkg_geomesa_scala_ver" && $pkg_geomesa_ver =~ 1[.]3[.].+ ]]; then
