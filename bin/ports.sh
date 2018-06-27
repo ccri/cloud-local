@@ -122,7 +122,7 @@ function configure_port_offset {
   if [ -f "$HBASE_HOME/conf/hbase-site.xml" ]; then
       xmlFiles+=$HBASE_HOME/conf/hbase-site.xml
   fi
-  for FILE in xmlFiles; do
+  for FILE in "${xmlFiles[@]}"; do
     while [[ -n "$(grep $KEY $FILE)" ]]; do # while lines need to be changed
         # pull the default port out of the comment
         basePort=$(grep -hoE "$KEY [0-9]+" $FILE | head -1 | grep -hoE [0-9]+)
