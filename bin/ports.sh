@@ -112,13 +112,17 @@ function configure_port_offset {
   # we replace all the instance of the default value, on the line with the comment, with
   # the desired (offset) port.
 
-  # TODO fix this to check for hbase/accumulo enabled
-  for FILE in $ACCUMULO_HOME/conf/accumulo-site.xml \
-              $HBASE_HOME/conf/hbase-site.xml \
-              $HADOOP_CONF_DIR/core-site.xml \
-              $HADOOP_CONF_DIR/hdfs-site.xml \
-              $HADOOP_CONF_DIR/mapred-site.xml \
-              $HADOOP_CONF_DIR/yarn-site.xml; do
+  xmlFiles=( $HADOOP_CONF_DIR/core-site.xml \
+          $HADOOP_CONF_DIR/hdfs-site.xml \
+          $HADOOP_CONF_DIR/mapred-site.xml \
+          $HADOOP_CONF_DIR/yarn-site.xml )
+  if [ -f "$ACCUMULO_HOME/conf/accumulo-site.xml" ]; then
+      xmlFiles+=($ACCUMULO_HOME/conf/accumulo-site.xml)
+  fi
+  if [ -f "$HBASE_HOME/conf/hbase-site.xml" ]; then
+      xmlFiles+=($HBASE_HOME/conf/hbase-site.xml)
+  fi
+  for FILE in "${xmlFiles[@]}"; do
     while [[ -n "$(grep $KEY $FILE)" ]]; do # while lines need to be changed
         # pull the default port out of the comment
         basePort=$(grep -hoE "$KEY [0-9]+" $FILE | head -1 | grep -hoE [0-9]+)
