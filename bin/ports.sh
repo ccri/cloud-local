@@ -117,10 +117,10 @@ function configure_port_offset {
           $HADOOP_CONF_DIR/mapred-site.xml \
           $HADOOP_CONF_DIR/yarn-site.xml )
   if [ -f "$ACCUMULO_HOME/conf/accumulo-site.xml" ]; then
-      xmlFiles+=$ACCUMULO_HOME/conf/accumulo-site.xml
+      xmlFiles+=($ACCUMULO_HOME/conf/accumulo-site.xml)
   fi
   if [ -f "$HBASE_HOME/conf/hbase-site.xml" ]; then
-      xmlFiles+=$HBASE_HOME/conf/hbase-site.xml
+      xmlFiles+=($HBASE_HOME/conf/hbase-site.xml)
   fi
   for FILE in "${xmlFiles[@]}"; do
     while [[ -n "$(grep $KEY $FILE)" ]]; do # while lines need to be changed
