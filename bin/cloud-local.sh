@@ -563,6 +563,10 @@ elif [[ $1 == 'regeoserver' ]]; then
   start_geoserver
 elif [[ $1 == 'setup' ]]; then
   unpackage && configure
+elif [[ $1 == 'startFirstTime' ]]; then
+  echo "Starting cloud for the first time..."
+  start_first_time
+  echo "Cloud started"
 elif [[ $1 == 'cleanStream' ]]; then
   clear_stream_data
 elif [[ $1 == 'startStream' ]]; then
