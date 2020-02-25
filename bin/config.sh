@@ -38,7 +38,7 @@ function validate_config {
     pkg_error="${pkg_error}Invalid zookeeper version: '${pkg_zookeeper_ver}' ${NL}"
   fi
   # acc 1.[6-9].x
-  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][6789][.]. ]]; then
+  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][6789][.].|2[.]0[.]0 ]]; then
     pkg_error="${pkg_error}Invalid accumulo version: '${pkg_accumulo_ver}' ${NL}"
   fi
   # kafka 0.9.x, 0.10.x, 0.11.x, 1.0.x

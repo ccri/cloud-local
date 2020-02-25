@@ -84,9 +84,11 @@ function download_packages {
   local maven=${pkg_src_maven}
 
   declare -a urls=("${apache_archive_url}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
-                   "${apache_archive_url}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
-                   "${apache_archive_url}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz")
+                   "${apache_archive_url}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz")
 
+  if [[ "$spark_enabled" -eq 1 ]]; then
+    urls=("${urls[@]}" "${apache_archive_url}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz")
+  fi
   
   if [[ "$kafka_enabled" -eq 1 ]]; then
     urls=("${urls[@]}" "${apache_archive_url}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
