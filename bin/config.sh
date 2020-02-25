@@ -78,7 +78,6 @@ function set_env_vars {
   fi
   
   export HADOOP_HOME="$CLOUD_HOME/hadoop-${pkg_hadoop_ver}"
-  export HADOOP_PREFIX="${HADOOP_HOME}"
   export HADOOP_CONF_DIR="${HADOOP_PREFIX}/etc/hadoop"
   export HADOOP_COMMON_HOME="${HADOOP_HOME}"
   export HADOOP_HDFS_HOME="${HADOOP_HOME}"
@@ -87,8 +86,6 @@ function set_env_vars {
   export HADOOP_IDENT_STRING=$(echo ${CLOUD_HOME} | (md5sum 2>/dev/null || md5) | cut -c1-32)
 
   export YARN_HOME="${HADOOP_HOME}" 
-  export YARN_PID_DIR="${HADOOP_PID_DIR}"
-  export YARN_IDENT_STRING="${HADOOP_IDENT_STRING}"
 
   export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}"
 
