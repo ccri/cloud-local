@@ -30,7 +30,7 @@ function validate_config {
   # allowed versions are
   local pkg_error=""
   # hadoop 2.[5-9].x
-  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.][56789][.]. ]]; then
+  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.][56789][.].|3[.]2[.]1 ]]; then
     pkg_error="${pkg_error}Invalid hadoop version: '${pkg_hadoop_ver}' ${NL}"
   fi
   # zk 3.4.[5-10]
