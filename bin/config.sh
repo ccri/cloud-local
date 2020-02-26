@@ -78,7 +78,7 @@ function set_env_vars {
   fi
   
   export HADOOP_HOME="$CLOUD_HOME/hadoop-${pkg_hadoop_ver}"
-  export HADOOP_CONF_DIR="${HADOOP_PREFIX}/etc/hadoop"
+  export HADOOP_CONF_DIR="${HADOOP_HOME}/etc/hadoop"
   export HADOOP_COMMON_HOME="${HADOOP_HOME}"
   export HADOOP_HDFS_HOME="${HADOOP_HOME}"
   export HADOOP_YARN_HOME="${HADOOP_HOME}"
