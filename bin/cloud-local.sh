@@ -199,8 +199,8 @@ function configure {
   if [ -f "$ACCUMULO_HOME/conf/accumulo-site.xml" ]; then
     "$ACCUMULO_HOME/bin/accumulo convert-config" \
       -x "$ACCUMULO_HOME/conf/accumulo-site.xml" \
-      -p "$ACCUMULO_HOME/conf/accumulo.properties" \
-      && rm "$ACCUMULO_HOME/conf/accumulo-site.xml"
+      -p "$ACCUMULO_HOME/conf/accumulo.properties"
+    rm "$ACCUMULO_HOME/conf/accumulo-site.xml"
   fi
 
   rm -rf ${CLOUD_HOME}/tmp/staging
