@@ -158,7 +158,7 @@ function configure {
     sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/gc
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/masters
-    echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/slaves
+    echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/tservers
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/monitor
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/tracers
   fi
@@ -195,6 +195,14 @@ function configure {
   # configure port offsets
   configure_port_offset
 
+  # As of Accumulo 2 accumulo-site.xml is nolonger allowed. To avoid a lot of work rewriting the ports script we'll just use accumulo's converter.
+  if [ -f "$ACCUMULO_HOME/conf/accumulo-site.xml" ]; then
+    "$ACCUMULO_HOME/bin/accumulo convert-config \
+      -x "$ACCUMULO_HOME/conf/accumulo-site.xml" \
+      -p "$ACCUMULO_HOME/conf/accumulo.properties" \
+      && rm "$ACCUMULO_HOME/conf/accumulo-site.xml"
+  fi
+
   rm -rf ${CLOUD_HOME}/tmp/staging
 }
 
@@ -216,15 +224,15 @@ function start_first_time {
   
   # format namenode
   echo "Formatting namenode..."
-  $HADOOP_HOME/bin/hadoop namenode -format
+  $HADOOP_HOME/bin/hdfs namenode -format
   
   # start hadoop
   echo "Starting hadoop..."
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start namenode
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start secondarynamenode
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start datanode
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon start namenode
+  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon start secondarynamenode
+  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon start datanode
+  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start resourcemanager
+  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start nodemanager
   
   # Wait for HDFS to exit safemode:
   echo "Waiting for HDFS to exit safemode..."
@@ -289,9 +297,9 @@ function start_cloud {
   
   # start hadoop
   echo "Starting hadoop..."
-  hadoop-daemon.sh --config $HADOOP_CONF_DIR start namenode
-  hadoop-daemon.sh --config $HADOOP_CONF_DIR start secondarynamenode
-  hadoop-daemon.sh --config $HADOOP_CONF_DIR start datanode
+  hdfs --config $HADOOP_CONF_DIR --daemon start namenode
+  hdfs --config $HADOOP_CONF_DIR --daemon start secondarynamenode
+  hdfs --config $HADOOP_CONF_DIR --daemon start datanode
   start_yarn
   
   # Wait for HDFS to exit safemode:
@@ -324,8 +332,8 @@ function start_cloud {
 }
 
 function start_yarn {
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start resourcemanager
+  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start nodemanager
 }
 
 function start_geoserver {
@@ -362,9 +370,9 @@ function stop_cloud {
   
   echo "Stopping yarn and dfs..."
   stop_yarn
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop namenode
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop secondarynamenode
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop datanode
+  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop namenode
+  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop secondarynamenode
+  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop datanode
  
   echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
@@ -437,8 +445,8 @@ function verify_stop {
 }
 
 function stop_yarn {
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop resourcemanager
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop nodemanager
+  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon stop resourcemanager
+  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon stop nodemanager
 }
 
 function stop_geoserver {
