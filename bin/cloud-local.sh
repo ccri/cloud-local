@@ -190,7 +190,7 @@ function configure {
   [[ "$zeppelin_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/zeppelin/* ${ZEPPELIN_HOME}/conf/
 
   # If Spark doesn't have log4j settings, use the Spark defaults
-  test -f $SPARK_HOME/conf/log4j.properties || cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
+  test -f $SPARK_HOME/conf/log4j.properties || [[ "$spark_enabled" -eq 1 ]] && cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
 
   # configure port offsets
   configure_port_offset

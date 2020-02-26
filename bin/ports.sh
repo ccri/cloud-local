@@ -96,9 +96,11 @@ function configure_port_offset {
   sed -i~orig "s/clientPort=.*/clientPort=$zkPort/" $ZOOKEEPER_HOME/conf/zoo.cfg
 
   # kafka (server.properties)
-  kafkaPort=$((9092+offset))
-  sed -i~orig "s/\/\/$CL_HOSTNAME:[0-9].*/\/\/$CL_HOSTNAME:$kafkaPort/" $KAFKA_HOME/config/server.properties
-  sed -i~orig "s/zookeeper.connect=$CL_HOSTNAME:[0-9].*/zookeeper.connect=$CL_HOSTNAME:$zkPort/" $KAFKA_HOME/config/server.properties
+  if [[ "kafka_enabled" -eq 1 ]]; then
+    kafkaPort=$((9092+offset))
+    sed -i~orig "s/\/\/$CL_HOSTNAME:[0-9].*/\/\/$CL_HOSTNAME:$kafkaPort/" $KAFKA_HOME/config/server.properties
+    sed -i~orig "s/zookeeper.connect=$CL_HOSTNAME:[0-9].*/zookeeper.connect=$CL_HOSTNAME:$zkPort/" $KAFKA_HOME/config/server.properties
+  fi
 
   # Zeppelin
   if [[ "$zeppelin_enabled" -eq 1 ]]; then
