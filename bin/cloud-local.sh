@@ -205,7 +205,7 @@ function configure {
   # Configure accumulo-client.properties
   if [ -f "$ACCUMULO_HOME/conf/accumulo-client.properties" ]; then
     sed -i "s/.*instance.name=.*$/instance.name=$cl_acc_inst_name/" "$ACCUMULO_HOME/conf/accumulo-client.properties"
-    sed -i "s/.*auth.principal=.*$/=auth.principal=root/"           "$ACCUMULO_HOME/conf/accumulo-client.properties"
+    sed -i "s/.*auth.principal=.*$/auth.principal=root/"           "$ACCUMULO_HOME/conf/accumulo-client.properties"
     sed -i "s/.*auth.token=.*$/auth.token=$cl_acc_inst_pass/"       "$ACCUMULO_HOME/conf/accumulo-client.properties"
 
   fi
