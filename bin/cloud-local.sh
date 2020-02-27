@@ -154,8 +154,6 @@ function configure {
 
   if [[ "$acc_enabled" -eq 1 ]]; then
     # accumulo config
-    # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
-    sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/gc
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/masters
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/tservers
@@ -197,12 +195,20 @@ function configure {
 
   # As of Accumulo 2 accumulo-site.xml is nolonger allowed. To avoid a lot of work rewriting the ports script we'll just use accumulo's converter.
   if [ -f "$ACCUMULO_HOME/conf/accumulo-site.xml" ]; then
-    "$ACCUMULO_HOME/bin/accumulo convert-config" \
+    rm -f "$ACCUMULO_HOME/conf/accumulo.properties"
+    "$ACCUMULO_HOME/bin/accumulo" convert-config \
       -x "$ACCUMULO_HOME/conf/accumulo-site.xml" \
       -p "$ACCUMULO_HOME/conf/accumulo.properties"
-    rm "$ACCUMULO_HOME/conf/accumulo-site.xml"
+    rm -f "$ACCUMULO_HOME/conf/accumulo-site.xml"
   fi
 
+  # Configure accumulo-client.properties
+  if [ -f "$ACCUMULO_HOME/conf/accumulo-client.properties" ]; then
+    sed -i "s/.*instance.name=.*$/instance.name=$cl_acc_inst_name/" "$ACCUMULO_HOME/conf/accumulo-client.properties"
+    sed -i "s/.*auth.principal=.*$/=auth.principal=root/"           "$ACCUMULO_HOME/conf/accumulo-client.properties"
+    sed -i "s/.*auth.token=.*$/auth.token=$cl_acc_inst_pass/"       "$ACCUMULO_HOME/conf/accumulo-client.properties"
+
+  fi
   rm -rf ${CLOUD_HOME}/tmp/staging
 }
 
@@ -360,7 +366,7 @@ function stop_cloud {
 
   if [[ "$acc_enabled" -eq 1 ]]; then
     echo "Stopping accumulo..."
-    $ACCUMULO_HOME/bin/stop-all.sh
+    $ACCUMULO_HOME/bin/accumulo-cluster stop
   fi
 
   if [[ "$hbase_enabled" -eq 1 ]]; then
