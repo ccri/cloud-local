@@ -30,7 +30,7 @@ function validate_config {
   # allowed versions are
   local pkg_error=""
   # hadoop 2.[5-9].x
-  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.][56789][.]. ]]; then
+  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.][56789][.].|3[.]2[.]1 ]]; then
     pkg_error="${pkg_error}Invalid hadoop version: '${pkg_hadoop_ver}' ${NL}"
   fi
   # zk 3.4.[5-10]
@@ -38,7 +38,7 @@ function validate_config {
     pkg_error="${pkg_error}Invalid zookeeper version: '${pkg_zookeeper_ver}' ${NL}"
   fi
   # acc 1.[6-9].x
-  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][6789][.]. ]]; then
+  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][6789][.].|2[.]0[.]0 ]]; then
     pkg_error="${pkg_error}Invalid accumulo version: '${pkg_accumulo_ver}' ${NL}"
   fi
   # kafka 0.9.x, 0.10.x, 0.11.x, 1.0.x
@@ -78,8 +78,7 @@ function set_env_vars {
   fi
   
   export HADOOP_HOME="$CLOUD_HOME/hadoop-${pkg_hadoop_ver}"
-  export HADOOP_PREFIX="${HADOOP_HOME}"
-  export HADOOP_CONF_DIR="${HADOOP_PREFIX}/etc/hadoop"
+  export HADOOP_CONF_DIR="${HADOOP_HOME}/etc/hadoop"
   export HADOOP_COMMON_HOME="${HADOOP_HOME}"
   export HADOOP_HDFS_HOME="${HADOOP_HOME}"
   export HADOOP_YARN_HOME="${HADOOP_HOME}"
@@ -87,8 +86,6 @@ function set_env_vars {
   export HADOOP_IDENT_STRING=$(echo ${CLOUD_HOME} | (md5sum 2>/dev/null || md5) | cut -c1-32)
 
   export YARN_HOME="${HADOOP_HOME}" 
-  export YARN_PID_DIR="${HADOOP_PID_DIR}"
-  export YARN_IDENT_STRING="${HADOOP_IDENT_STRING}"
 
   export SPARK_HOME="$CLOUD_HOME/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}"
 
