@@ -315,7 +315,7 @@ function start_cloud {
   if [[ "$acc_enabled" -eq 1 ]]; then
     # starting accumulo
     echo "starting accumulo..."
-    $ACCUMULO_HOME/bin/start-all.sh
+    $ACCUMULO_HOME/bin/accumulo-cluster start
   fi
 
   if [[ "$hbase_enabled" -eq 1 ]]; then
