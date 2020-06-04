@@ -291,27 +291,35 @@ function start_first_time {
 function start_cloud {
   # Check ports
   check_ports
-  
-  # start zk
-  echo "Starting zoo..."
-  (cd $CLOUD_HOME ; zkServer.sh start)
+ 
+  if [[ "$master_enabled" -eq 1 ]]; then
+  	# start zk
+  	echo "Starting zoo..."
+  	(cd $CLOUD_HOME ; zkServer.sh start)
 
-  if [[ "$kafka_enabled" -eq 1 ]]; then
-    echo "Starting kafka..."
-    $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
-  fi
+  	if [[ "$kafka_enabled" -eq 1 ]]; then
+    	echo "Starting kafka..."
+    	$KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+  	fi
   
-  # start hadoop
-  echo "Starting hadoop..."
-  hdfs --config $HADOOP_CONF_DIR --daemon start namenode
-  hdfs --config $HADOOP_CONF_DIR --daemon start secondarynamenode
-  hdfs --config $HADOOP_CONF_DIR --daemon start datanode
+  	# start hadoop
+  	echo "Starting hadoop..."
+  	hdfs --config $HADOOP_CONF_DIR --daemon start namenode
+  	hdfs --config $HADOOP_CONF_DIR --daemon start secondarynamenode
+  fi
+
+  if [[ "$worker_enabled" -eq 1 ]]; then
+  	hdfs --config $HADOOP_CONF_DIR --daemon start datanode
+  fi
+
   start_yarn
   
   # Wait for HDFS to exit safemode:
   echo "Waiting for HDFS to exit safemode..."
   hdfs dfsadmin -safemode wait
+}
 
+function start_db {
   if [[ "$acc_enabled" -eq 1 ]]; then
     # starting accumulo
     echo "starting accumulo..."
@@ -338,8 +346,12 @@ function start_cloud {
 }
 
 function start_yarn {
-  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start resourcemanager
-  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start nodemanager
+  if [[ "$master_enabled" -eq 1 ]]; then
+    $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start resourcemanager
+  fi 
+  if [[ "$worker_enabled" -eq 1 ]]; then
+  	$HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start nodemanager
+  fi 
 }
 
 function start_geoserver {
@@ -351,7 +363,7 @@ function start_geoserver {
   echo "GeoServer Out: ${GEOSERVER_LOG_DIR}/std.out"
 }
 
-function stop_cloud {
+function stop_db {
   verify_stop
 
   if [[ "$zeppelin_enabled" -eq 1 ]]; then
@@ -373,13 +385,19 @@ function stop_cloud {
     echo "Stopping hbase..."
     ${HBASE_HOME}/bin/stop-hbase.sh
   fi
-  
+}
+
+function stop_cloud {
   echo "Stopping yarn and dfs..."
   stop_yarn
-  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop namenode
-  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop secondarynamenode
-  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop datanode
- 
+
+  if [[ "$master_enabled" -eq 1 ]]; then
+  	$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop namenode
+  	$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop secondarynamenode
+  fi 
+  if [[ "$worker_enabled" -eq 1 ]]; then
+  	$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop datanode
+  fi 
   echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 
@@ -525,12 +543,28 @@ elif [[ $1 == 'clean' ]]; then
   echo "cleaned!"
 elif [[ $1 == 'start' ]]; then
   echo "Starting cloud..."
-  start_cloud
+  start_cloud && start_db
   echo "Cloud Started"
 elif [[ $1 == 'stop' ]]; then
   echo "Stopping Cloud..."
-  stop_cloud
+  stop_db && stop_cloud
   echo "Cloud stopped"
+elif [[ $1 == 'start_db' ]]; then
+  echo "Starting cloud..."
+  start_db
+  echo "Database Started"
+elif [[ $1 == 'stop_db' ]]; then
+  echo "Stopping Database..."
+  stop_db
+  echo "Cloud stopped"
+elif [[ $1 == 'start_hadoop' ]]; then
+  echo "Starting Hadoop..."
+  start_cloud
+  echo "Cloud Hadoop"
+elif [[ $1 == 'stop_hadoop' ]]; then
+  echo "Stopping Hadoop..."
+  stop_cloud
+  echo "Hadoop stopped"
 elif [[ $1 == 'reyarn' ]]; then
   echo "Stopping Yarn..."
   stop_yarn
