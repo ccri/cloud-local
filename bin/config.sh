@@ -29,16 +29,16 @@ NL=$'\n'
 function validate_config {
   # allowed versions are
   local pkg_error=""
-  # hadoop 2.[5-9].x
-  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 2[.][56789][.].|3[.]2[.]1 ]]; then
+  # hadoop 3.2 currently required
+  if [[ -z "$pkg_hadoop_ver" || ! $pkg_hadoop_ver =~ 3[.]2[.].+ ]]; then
     pkg_error="${pkg_error}Invalid hadoop version: '${pkg_hadoop_ver}' ${NL}"
   fi
-  # zk 3.4.[5-10]
-  if [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.]([56789]|10) ]]; then
+  # zk 3.4.x 
+  if [[ -z "$pkg_zookeeper_ver" || ! $pkg_zookeeper_ver =~ 3[.]4[.]([56789]|10|11|12|13|14) ]]; then
     pkg_error="${pkg_error}Invalid zookeeper version: '${pkg_zookeeper_ver}' ${NL}"
   fi
-  # acc 1.[6-9].x
-  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 1[.][6789][.].|2[.]0[.]0 ]]; then
+  # acc 2.0.0
+  if [[ -z "$pkg_accumulo_ver" || ! $pkg_accumulo_ver =~ 2[.]0[.]0 ]]; then
     pkg_error="${pkg_error}Invalid accumulo version: '${pkg_accumulo_ver}' ${NL}"
   fi
   # kafka 0.9.x, 0.10.x, 0.11.x, 1.0.x
@@ -46,7 +46,7 @@ function validate_config {
     pkg_error="${pkg_error}Invalid kafka version: '${pkg_kafka_ver}' ${NL}"
   fi
   # geomesa scala 1.3.x
-  if [[ -z "$pkg_geomesa_scala_ver" && $pkg_geomesa_ver =~ 1[.]3[.].+ ]]; then
+  if [[ -z "$pkg_geomesa_scala_ver" && $pkg_geomesa_ver =~ 3[.]0[.].+ ]]; then
     pkg_error="${pkg_error}Invalid GeoMesa Scala version: '${pkg_geomesa_scala_ver}' ${NL}"
   fi
   

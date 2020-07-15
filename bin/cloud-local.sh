@@ -63,12 +63,10 @@ function download_packages {
   if [[ "${geomesa_enabled}" -eq "1" ]]; then
     gm="geomesa-accumulo-dist_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}-bin.tar.gz"
     url="${REPO_BASE}/org/locationtech/geomesa/geomesa-accumulo-dist_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
-    wget -c -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
-      || { rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"; };
+    wget -c -O "${CLOUD_HOME}/pkg/${gm}" "${url}" || { rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"; };
     gm="geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}-${pkg_geomesa_ver}.jar"
     url="${REPO_BASE}/org/locationtech/geomesa/geomesa-accumulo-distributed-runtime_${pkg_geomesa_scala_ver}/${pkg_geomesa_ver}/${gm}"
-    wget -c -O "${CLOUD_HOME}/pkg/${gm}" "${url}" \
-      || { rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"; };
+    wget -c -O "${CLOUD_HOME}/pkg/${gm}" "${url}" || { rm -f "${CLOUD_HOME}/pkg/${gm}"; echo "Error downloading: ${CLOUD_HOME}/pkg/${gm}"; errorList="${errorList} ${gm} ${NL}"; };
   fi
 
   # Scala
@@ -137,8 +135,7 @@ function unpackage {
   [[ "$hbase_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hbase-${pkg_hbase_ver}-bin.tar.gz") && echo "Unpacked hbase"
   [[ "$zeppelin_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz") && echo "Unpacked zeppelin"
   [[ "$kafka_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz") && echo "Unpacked kafka"
-  [[ "$spark_enabled" -eq 1 ]] \
-    && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz") && echo "Unpacked spark"
+  [[ "$spark_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz") && echo "Unpacked spark"
   (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz") && echo "Unpacked hadoop"
 }
 
@@ -147,7 +144,7 @@ function configure {
   cp -r ${CLOUD_HOME}/templates/* ${CLOUD_HOME}/tmp/staging/
 
   # accumulo config before substitutions
-  ##[[ "$acc_enabled" -eq 1 ]] && cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
+  [[ "$acc_enabled" -eq 1 ]] && cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
 
   ## Substitute env vars
   sed -i~orig "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#;s#CLOUD_LOCAL_HOSTNAME#${CL_HOSTNAME}#;s#CLOUD_LOCAL_BIND_ADDRESS#${CL_BIND_ADDRESS}#" ${CLOUD_HOME}/tmp/staging/*/*
@@ -188,7 +185,9 @@ function configure {
   [[ "$zeppelin_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/zeppelin/* ${ZEPPELIN_HOME}/conf/
 
   # If Spark doesn't have log4j settings, use the Spark defaults
-  test -f $SPARK_HOME/conf/log4j.properties || [[ "$spark_enabled" -eq 1 ]] && cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
+  if [[ "$spark_enabled" -eq 1 ]]; then
+    test -f $SPARK_HOME/conf/log4j.properties && cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
+  fi
 
   # configure port offsets
   configure_port_offset
@@ -241,9 +240,8 @@ function start_first_time {
   $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start nodemanager
   
   # Wait for HDFS to exit safemode:
-  echo "Waiting for HDFS to exit safemode..."
-  $HADOOP_HOME/bin/hdfs dfsadmin -safemode wait
-  
+  hdfs_wait_safemode 
+
   # create user homedir
   echo "Creating hdfs path /user/$USER"
   $HADOOP_HOME/bin/hadoop fs -mkdir -p "/user/$USER"
@@ -316,8 +314,23 @@ function start_cloud {
   
   # Wait for HDFS to exit safemode:
   echo "Waiting for HDFS to exit safemode..."
-  hdfs dfsadmin -safemode wait
+  hdfs_wait_safemode
 }
+
+function hdfs_wait_safemode {
+  safemode_done=1
+  while [[ "$safemode_done" -ne 0 ]]; do
+    echo "Waiting for HDFS to exit safemode..."
+    hdfs dfsadmin -safemode wait
+    safemode_done=$?
+    if [[ "$safemode_done" -ne 0 ]]; then
+      echo "Safe mode not done...sleeping 1"
+      sleep 1;
+    fi
+  done
+  echo "Safemode exited"
+}
+
 
 function start_db {
   if [[ "$acc_enabled" -eq 1 ]]; then

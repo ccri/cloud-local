@@ -11,6 +11,10 @@ Cloud Local can be used to run single node versions of the following software:
 * Kafka
 * GeoMesa
 
+## Versions and Branches
+
+The main branch requires Hadoop 3.x and Accumulo 2.0 while the hadoop2 branch is based on Hadoop 2.x and Accumulo 1.x
+
 ## Initial Configuration
 
 A proxy server can be configured by using the standard `http_proxy` env var or the cloud-local specific `cl_http_proxy` env var. The cloud local specific variable takes precedence.
