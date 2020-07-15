@@ -84,9 +84,11 @@ function download_packages {
   local maven=${pkg_src_maven}
 
   declare -a urls=("${apache_archive_url}/hadoop/common/hadoop-${pkg_hadoop_ver}/hadoop-${pkg_hadoop_ver}.tar.gz"
-                   "${apache_archive_url}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz"
-                   "${apache_archive_url}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz")
+                   "${apache_archive_url}/zookeeper/zookeeper-${pkg_zookeeper_ver}/zookeeper-${pkg_zookeeper_ver}.tar.gz")
 
+  if [[ "$spark_enabled" -eq 1 ]]; then
+    urls=("${urls[@]}" "${apache_archive_url}/spark/spark-${pkg_spark_ver}/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz")
+  fi
   
   if [[ "$kafka_enabled" -eq 1 ]]; then
     urls=("${urls[@]}" "${apache_archive_url}/kafka/${pkg_kafka_ver}/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz")
@@ -134,9 +136,10 @@ function unpackage {
   [[ "$acc_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/accumulo-${pkg_accumulo_ver}-bin.tar.gz") && echo "Unpacked accumulo"
   [[ "$hbase_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hbase-${pkg_hbase_ver}-bin.tar.gz") && echo "Unpacked hbase"
   [[ "$zeppelin_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/zeppelin-${pkg_zeppelin_ver}-bin-all.tgz") && echo "Unpacked zeppelin"
-  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz") && echo "Unpacked hadoop"
   [[ "$kafka_enabled" -eq 1 ]] && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/kafka_${pkg_kafka_scala_ver}-${pkg_kafka_ver}.tgz") && echo "Unpacked kafka"
-  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz") && echo "Unpacked spark"
+  [[ "$spark_enabled" -eq 1 ]] \
+    && (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/spark-${pkg_spark_ver}-bin-${pkg_spark_hadoop_ver}.tgz") && echo "Unpacked spark"
+  (cd -P "${CLOUD_HOME}" && tar $targs "${CLOUD_HOME}/pkg/hadoop-${pkg_hadoop_ver}.tar.gz") && echo "Unpacked hadoop"
 }
 
 function configure {
@@ -144,18 +147,16 @@ function configure {
   cp -r ${CLOUD_HOME}/templates/* ${CLOUD_HOME}/tmp/staging/
 
   # accumulo config before substitutions
-  [[ "$acc_enabled" -eq 1 ]] && cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
+  ##[[ "$acc_enabled" -eq 1 ]] && cp $ACCUMULO_HOME/conf/examples/3GB/standalone/* $ACCUMULO_HOME/conf/
 
   ## Substitute env vars
   sed -i~orig "s#LOCAL_CLOUD_PREFIX#${CLOUD_HOME}#;s#CLOUD_LOCAL_HOSTNAME#${CL_HOSTNAME}#;s#CLOUD_LOCAL_BIND_ADDRESS#${CL_BIND_ADDRESS}#" ${CLOUD_HOME}/tmp/staging/*/*
 
   if [[ "$acc_enabled" -eq 1 ]]; then
     # accumulo config
-    # make accumulo bind to all network interfaces (so you can see the monitor from other boxes)
-    sed -i~orig "s/\# export ACCUMULO_MONITOR_BIND_ALL=\"true\"/export ACCUMULO_MONITOR_BIND_ALL=\"true\"/" "${ACCUMULO_HOME}/conf/accumulo-env.sh"
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/gc
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/masters
-    echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/slaves
+    echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/tservers
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/monitor
     echo "${CL_HOSTNAME}" > ${ACCUMULO_HOME}/conf/tracers
   fi
@@ -187,11 +188,27 @@ function configure {
   [[ "$zeppelin_enabled" -eq 1 ]] && cp ${CLOUD_HOME}/tmp/staging/zeppelin/* ${ZEPPELIN_HOME}/conf/
 
   # If Spark doesn't have log4j settings, use the Spark defaults
-  test -f $SPARK_HOME/conf/log4j.properties || cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
+  test -f $SPARK_HOME/conf/log4j.properties || [[ "$spark_enabled" -eq 1 ]] && cp $SPARK_HOME/conf/log4j.properties.template $SPARK_HOME/conf/log4j.properties
 
   # configure port offsets
   configure_port_offset
 
+  # As of Accumulo 2 accumulo-site.xml is nolonger allowed. To avoid a lot of work rewriting the ports script we'll just use accumulo's converter.
+  if [ -f "$ACCUMULO_HOME/conf/accumulo-site.xml" ]; then
+    rm -f "$ACCUMULO_HOME/conf/accumulo.properties"
+    "$ACCUMULO_HOME/bin/accumulo" convert-config \
+      -x "$ACCUMULO_HOME/conf/accumulo-site.xml" \
+      -p "$ACCUMULO_HOME/conf/accumulo.properties"
+    rm -f "$ACCUMULO_HOME/conf/accumulo-site.xml"
+  fi
+
+  # Configure accumulo-client.properties
+  if [ -f "$ACCUMULO_HOME/conf/accumulo-client.properties" ]; then
+    sed -i "s/.*instance.name=.*$/instance.name=$cl_acc_inst_name/" "$ACCUMULO_HOME/conf/accumulo-client.properties"
+    sed -i "s/.*auth.principal=.*$/auth.principal=root/"           "$ACCUMULO_HOME/conf/accumulo-client.properties"
+    sed -i "s/.*auth.token=.*$/auth.token=$cl_acc_inst_pass/"       "$ACCUMULO_HOME/conf/accumulo-client.properties"
+
+  fi
   rm -rf ${CLOUD_HOME}/tmp/staging
 }
 
@@ -213,15 +230,15 @@ function start_first_time {
   
   # format namenode
   echo "Formatting namenode..."
-  $HADOOP_HOME/bin/hadoop namenode -format
+  $HADOOP_HOME/bin/hdfs namenode -format
   
   # start hadoop
   echo "Starting hadoop..."
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start namenode
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start secondarynamenode
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start datanode
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon start namenode
+  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon start secondarynamenode
+  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon start datanode
+  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start resourcemanager
+  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start nodemanager
   
   # Wait for HDFS to exit safemode:
   echo "Waiting for HDFS to exit safemode..."
@@ -244,7 +261,7 @@ function start_first_time {
 
     # starting accumulo
     echo "Starting accumulo..."
-    $ACCUMULO_HOME/bin/start-all.sh
+    $ACCUMULO_HOME/bin/accumulo-cluster start
   fi
 
   if [[ "$hbase_enabled" -eq 1 ]]; then
@@ -274,31 +291,39 @@ function start_first_time {
 function start_cloud {
   # Check ports
   check_ports
-  
-  # start zk
-  echo "Starting zoo..."
-  (cd $CLOUD_HOME ; zkServer.sh start)
+ 
+  if [[ "$master_enabled" -eq 1 ]]; then
+  	# start zk
+  	echo "Starting zoo..."
+  	(cd $CLOUD_HOME ; zkServer.sh start)
 
-  if [[ "$kafka_enabled" -eq 1 ]]; then
-    echo "Starting kafka..."
-    $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
-  fi
+  	if [[ "$kafka_enabled" -eq 1 ]]; then
+    	echo "Starting kafka..."
+    	$KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+  	fi
   
-  # start hadoop
-  echo "Starting hadoop..."
-  hadoop-daemon.sh --config $HADOOP_CONF_DIR start namenode
-  hadoop-daemon.sh --config $HADOOP_CONF_DIR start secondarynamenode
-  hadoop-daemon.sh --config $HADOOP_CONF_DIR start datanode
+  	# start hadoop
+  	echo "Starting hadoop..."
+  	hdfs --config $HADOOP_CONF_DIR --daemon start namenode
+  	hdfs --config $HADOOP_CONF_DIR --daemon start secondarynamenode
+  fi
+
+  if [[ "$worker_enabled" -eq 1 ]]; then
+  	hdfs --config $HADOOP_CONF_DIR --daemon start datanode
+  fi
+
   start_yarn
   
   # Wait for HDFS to exit safemode:
   echo "Waiting for HDFS to exit safemode..."
   hdfs dfsadmin -safemode wait
+}
 
+function start_db {
   if [[ "$acc_enabled" -eq 1 ]]; then
     # starting accumulo
     echo "starting accumulo..."
-    $ACCUMULO_HOME/bin/start-all.sh
+    $ACCUMULO_HOME/bin/accumulo-cluster start
   fi
 
   if [[ "$hbase_enabled" -eq 1 ]]; then
@@ -321,8 +346,12 @@ function start_cloud {
 }
 
 function start_yarn {
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+  if [[ "$master_enabled" -eq 1 ]]; then
+    $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start resourcemanager
+  fi 
+  if [[ "$worker_enabled" -eq 1 ]]; then
+  	$HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start nodemanager
+  fi 
 }
 
 function start_geoserver {
@@ -334,7 +363,7 @@ function start_geoserver {
   echo "GeoServer Out: ${GEOSERVER_LOG_DIR}/std.out"
 }
 
-function stop_cloud {
+function stop_db {
   verify_stop
 
   if [[ "$zeppelin_enabled" -eq 1 ]]; then
@@ -349,20 +378,26 @@ function stop_cloud {
 
   if [[ "$acc_enabled" -eq 1 ]]; then
     echo "Stopping accumulo..."
-    $ACCUMULO_HOME/bin/stop-all.sh
+    $ACCUMULO_HOME/bin/accumulo-cluster stop
   fi
 
   if [[ "$hbase_enabled" -eq 1 ]]; then
     echo "Stopping hbase..."
     ${HBASE_HOME}/bin/stop-hbase.sh
   fi
-  
+}
+
+function stop_cloud {
   echo "Stopping yarn and dfs..."
   stop_yarn
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop namenode
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop secondarynamenode
-  $HADOOP_HOME/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR stop datanode
- 
+
+  if [[ "$master_enabled" -eq 1 ]]; then
+  	$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop namenode
+  	$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop secondarynamenode
+  fi 
+  if [[ "$worker_enabled" -eq 1 ]]; then
+  	$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop datanode
+  fi 
   echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop
 
@@ -434,8 +469,8 @@ function verify_stop {
 }
 
 function stop_yarn {
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop resourcemanager
-  $HADOOP_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR stop nodemanager
+  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon stop resourcemanager
+  $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon stop nodemanager
 }
 
 function stop_geoserver {
@@ -508,12 +543,28 @@ elif [[ $1 == 'clean' ]]; then
   echo "cleaned!"
 elif [[ $1 == 'start' ]]; then
   echo "Starting cloud..."
-  start_cloud
+  start_cloud && start_db
   echo "Cloud Started"
 elif [[ $1 == 'stop' ]]; then
   echo "Stopping Cloud..."
-  stop_cloud
+  stop_db && stop_cloud
   echo "Cloud stopped"
+elif [[ $1 == 'start_db' ]]; then
+  echo "Starting cloud..."
+  start_db
+  echo "Database Started"
+elif [[ $1 == 'stop_db' ]]; then
+  echo "Stopping Database..."
+  stop_db
+  echo "Cloud stopped"
+elif [[ $1 == 'start_hadoop' ]]; then
+  echo "Starting Hadoop..."
+  start_cloud
+  echo "Cloud Hadoop"
+elif [[ $1 == 'stop_hadoop' ]]; then
+  echo "Stopping Hadoop..."
+  stop_cloud
+  echo "Hadoop stopped"
 elif [[ $1 == 'reyarn' ]]; then
   echo "Stopping Yarn..."
   stop_yarn
