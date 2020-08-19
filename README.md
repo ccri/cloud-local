@@ -121,6 +121,8 @@ Additionally, if you need to restart GeoServer you may use the command `regeoser
     
 The GeoServer PID is stored in `$CLOUD_HOME/data/geoserver/pid/geoserver.pid` and GeoServer's stdout is redirected to `$CLOUD_HOME/data/geoserver/log/std.out`.
 
+<<<<<<< HEAD
+=======
 ## Zeppelin
 
 Zeppelin is *disabled* by default.
@@ -144,6 +146,7 @@ To enable GeoMesa's Spark-SQL within Zeppelin:
 
 That's it!  There is no need to restart any of the cloud-local services.
 
+>>>>>>> upstream/master
 ## Maintenance
 
 The `cloud-local.sh` script provides options for maintenance. Best to stop the cloud before performing any of these tasks. Pass in the parameter `clean` to remove software (but not the tar.gz's) and data. The parameter `reconfigure` will first `clean` then `init`.

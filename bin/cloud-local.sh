@@ -355,7 +355,6 @@ function start_db {
     echo "Starting geoserver..."
     start_geoserver
   fi
-
 }
 
 function start_yarn {
