@@ -204,11 +204,28 @@ function configure {
   # Configure accumulo-client.properties
   if [ -f "$ACCUMULO_HOME/conf/accumulo-client.properties" ]; then
     sed -i "s/.*instance.name=.*$/instance.name=$cl_acc_inst_name/" "$ACCUMULO_HOME/conf/accumulo-client.properties"
-    sed -i "s/.*auth.principal=.*$/auth.principal=root/"           "$ACCUMULO_HOME/conf/accumulo-client.properties"
+    sed -i "s/.*auth.principal=.*$/auth.principal=root/"            "$ACCUMULO_HOME/conf/accumulo-client.properties"
     sed -i "s/.*auth.token=.*$/auth.token=$cl_acc_inst_pass/"       "$ACCUMULO_HOME/conf/accumulo-client.properties"
 
   fi
   rm -rf ${CLOUD_HOME}/tmp/staging
+}
+
+function make_accumulo_namespace {
+   $HADOOP_HOME/bin/hadoop fs -mkdir /accumulo/classpath
+   $HADOOP_HOME/bin/hadoop fs -mkdir /accumulo/classpath/${acc_gm_namespace}
+   $HADOOP_HOME/bin/hadoop fs -put ${acc_runtime_jar} /accumulo/classpath/${acc_gm_namespace}/
+
+cat >> add-distributed-jar-accumulo-script << EOF
+createnamespace ${acc_gm_namespace}
+grant NameSpace.CREATE_TABLE -ns ${acc_gm_namespace} -u myUser
+config -s general.vfs.context.classpath.${acc_gm_namespace}=hdfs://localhost:9000/accumulo/classpath/${acc_gm_namespace}/[^.].*.jar
+config -ns ${acc_gm_namespace} -s table.classpath.context=${acc_gm_namespace}
+setauths -u root -s "${acc_auths}"
+exit
+EOF
+
+   ${ACCUMULO_HOME}/bin/accumulo shell -u root -p secret -fv add-distributed-jar-accumulo-script
 }
 
 function start_first_time {
@@ -260,6 +277,11 @@ function start_first_time {
     # starting accumulo
     echo "Starting accumulo..."
     $ACCUMULO_HOME/bin/accumulo-cluster start
+
+    if [[ "$acc_namespace_enabled" -eq 1 ]]; then
+      sleep 15
+      make_accumulo_namespace 
+    fi
   fi
 
   if [[ "$hbase_enabled" -eq 1 ]]; then
@@ -291,23 +313,24 @@ function start_cloud {
   check_ports
  
   if [[ "$master_enabled" -eq 1 ]]; then
-  	# start zk
-  	echo "Starting zoo..."
-  	(cd $CLOUD_HOME ; zkServer.sh start)
+      # start zk
+      echo "Starting zoo..."
+        (cd $CLOUD_HOME; $ZOOKEEPER_HOME/bin/zkServer.sh start)
 
-  	if [[ "$kafka_enabled" -eq 1 ]]; then
-    	echo "Starting kafka..."
-    	$KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
-  	fi
+      if [[ "$kafka_enabled" -eq 1 ]]; then
+        echo "Starting kafka..."
+        $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+      fi
   
-  	# start hadoop
-  	echo "Starting hadoop..."
-  	hdfs --config $HADOOP_CONF_DIR --daemon start namenode
-  	hdfs --config $HADOOP_CONF_DIR --daemon start secondarynamenode
+      # start hadoop
+      echo "Starting hadoop..."
+      $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon start namenode
+      $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon start secondarynamenode
+      $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon start datanode
   fi
 
   if [[ "$worker_enabled" -eq 1 ]]; then
-  	hdfs --config $HADOOP_CONF_DIR --daemon start datanode
+      hdfs --config $HADOOP_CONF_DIR --daemon start datanode
   fi
 
   start_yarn
@@ -363,7 +386,7 @@ function start_yarn {
     $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start resourcemanager
   fi 
   if [[ "$worker_enabled" -eq 1 ]]; then
-  	$HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start nodemanager
+      $HADOOP_HOME/bin/yarn --config $HADOOP_CONF_DIR --daemon start nodemanager
   fi 
 }
 
@@ -405,11 +428,11 @@ function stop_cloud {
   stop_yarn
 
   if [[ "$master_enabled" -eq 1 ]]; then
-  	$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop namenode
-  	$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop secondarynamenode
+      $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop namenode
+      $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop secondarynamenode
   fi 
   if [[ "$worker_enabled" -eq 1 ]]; then
-  	$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop datanode
+      $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR --daemon stop datanode
   fi 
   echo "Stopping zookeeper..."
   $ZOOKEEPER_HOME/bin/zkServer.sh stop

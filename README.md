@@ -172,3 +172,11 @@ If you foobar your cloud, you can just delete everything and start over. You sho
 ## Virtual Machine Help
 
 If you are using cloud-local within a virtual machine running you your local box you may want to set up port forwarding for port 50095 to see the accumulo monitor. For VirtualBox go to VM's Settings->Network->Port Forwarding section (name=accumulo, protocol=TCP, Host IP=127.0.0.1, Guest IP (leave blank), Guest Port=50095)
+
+
+## You might need to clean the environment variables if you already have some packages installed
+
+
+    for n in ZOO HADOOP YARN ACCUMULO; do var=$(env |grep ${n}|awk -F= ''{print $1};echo $val; unset $val; end
+
+
