@@ -225,7 +225,7 @@ setauths -u root -s "${acc_auths}"
 exit
 EOF
 
-   ${ACCUMULO_HOME}/bin/accumulo shell -u root -p secret -fv add-distributed-jar-accumulo-script
+   ${ACCUMULO_HOME}/bin/accumulo shell -u root -p ${cl_acc_inst_pass} -fv add-distributed-jar-accumulo-script
 }
 
 function start_first_time {
